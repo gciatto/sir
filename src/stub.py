@@ -10,6 +10,7 @@ like ROS (www.ros.org).
 import logging
 import sys
 from sir.client.controller import SirRobotController as Controller
+from sir.client.strategies.behaviors import *
 
 logger = logging.getLogger("morse.client")
 logger.addHandler(logging.StreamHandler())
@@ -31,7 +32,10 @@ try:
         laser = simulation.robot.laser
         odometry = simulation.robot.odometry
 
-        controller = Controller(simulation.robot.name + "_controller", logger)
+        controller = Controller(simulation.robot.name + "_controller", logger=logger)
+
+        controller.add_behavior(go_on()) \
+            .add_behavior(obstacle_avoidance())
 
         tprev = tend = 0
 

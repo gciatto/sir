@@ -1,7 +1,15 @@
 from abc import abstractmethod
 import logging
+from gciatto.utils import *
+from operator import itemgetter
+from collections import namedtuple
+from itertools import chain
+from sir.client.strategies.obstacles import PoiAsObstacles
+from types import MethodType
+from functools import partialmethod
 
 logger = logging.getLogger()
+
 
 class AbstractRobotController:
     """
@@ -81,16 +89,90 @@ class AbstractRobotController:
         self._update_actuators(self._believes, self._actuators, dt)
         return self._actuators
 
+    def add_behavior(self, behavior):
+        old_layer = self._update_actuators
+        new_layer = MethodType(behavior, self)
+
+        def _method(self, *args, **kwargs):
+            old_layer(*args, **kwargs)
+            new_layer(*args, **kwargs)
+
+        self._update_actuators = MethodType(_method, self)
+        return self
+
+
+PointOfInterest = namedtuple('PointOfInterest', ['rho', 'theta', 'phi', 'x', 'y', 'z'])
+Speed = namedtuple('Speed', ['x', 'y', 'theta'])
+
+
+def _cartesian_to_poi(p):
+    polar = cartesian_to_polar(*p)
+    normalized = normalize_polar_radians(polar)
+    return PointOfInterest(*chain(normalized, p))
+
 
 class SirRobotController(AbstractRobotController):
-    def __init__(self, name, *args, **kwargs):
+    def __init__(self, name, obstacles_strategy=PoiAsObstacles, *args, **kwargs):
         super().__init__(name, *args, **kwargs)
+        self._obstacles_extractor = obstacles_strategy(self._believes)
+        self._actuators['motion'] = dict(x=0, y=0, w=0)
 
     def _update_believes(self, sensors: dict, believes: dict, dt: float):
-        self.logger.debug(repr(sensors))
+        believes['points_of_interest'] = tuple(
+            map(
+                _cartesian_to_poi,
+                filter(
+                    is_not_zero,
+                    self.get_laser_points()
+                )
+            )
+        )
+        self.logger.debug("Points of interest: %s", self.get_points_of_interest())
+
+        self._extract_obstacles()
+        self.logger.debug("Obstacles: %s", self.get_obstacles())
+
+    def _extract_obstacles(self):
+        self._obstacles_extractor.extract_obstacles()
 
     def _update_actuators(self, believes: dict, actuators: dict, dt: float):
-        self.set_velocity(0.5)
+        pass  # self.logger.debug("_update_actuators")
 
-    def set_velocity(self, forward=0, angular=0, sideward=0):
-        self._actuators.update(motion=dict(x=forward, y=sideward, w=angular))
+    def get_velocity(self):
+        m = self._actuators['motion']
+        return Speed(m['x'], m['y'], m['w'])
+
+    def set_velocity(self, x=None, theta=None, y=None):
+        if 'motion' not in self._actuators:
+            m = dict(x=0, y=0, w=0)
+            self._actuators['motion'] = m
+        else:
+            m = self._actuators['motion']
+        if x:
+            m['x'] = x
+        if y:
+            m['y'] = y
+        if theta:
+            m['w'] = theta
+
+    def inc_velocity(self, x=0, theta=0, y=0):
+        if 'motion' not in self._actuators:
+            m = dict(x=0, y=0, w=0)
+            self._actuators['motion'] = m
+        else:
+            m = self._actuators['motion']
+        m['x'] += x
+        m['y'] += y
+        m['w'] += theta
+
+    def get_laser_points(self):
+        return self._sensors['laser']['point_list']
+
+    def get_points_of_interest(self):
+        return self._believes['points_of_interest']
+
+    def get_obstacles(self):
+        return self._believes['obstacles']
+
+
+
