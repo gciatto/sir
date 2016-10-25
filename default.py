@@ -9,7 +9,7 @@ from sir.builder.sensors import *
 from sir.const.laser import *
 from morse.builder import *
 
-robot = B21()
+robot = ATRV()
 
 laser = Hokuyo()
 laser.properties(
@@ -26,7 +26,7 @@ robot.append(laser)
 odometry = Odometry()
 odometry.level('differential')
 odometry.alter('', 'sir.modifiers.OdometryZeroMeanGaussianNoiseModifier')
-odometry.translate(0, 0, 0.96)
+odometry.translate(0, 0, 0.5)
 robot.append(odometry)
 
 motion = MotionXYW()
@@ -46,6 +46,7 @@ robot.rotate(0.0, 0.0, 180)
 robot.add_default_interface('socket')
 
 env = Environment('indoors-1/indoor-1', fastmode=True)
+env.set_time_scale(slowdown_by=2)
 # env = Environment('tum_kitchen/tum_kitchen', fastmode=True)
 env.set_camera_location([-18.0, -6.7, 10.8])
 env.set_camera_rotation([1.09, 0, -1.14])
