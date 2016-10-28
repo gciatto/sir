@@ -9,8 +9,8 @@ def paths(name='*', ext='*'):
     if ext is not None:
         pattern += ext
     pattern = str(resources_path.joinpath(pattern))
-    g = glob.glob(pattern)
-    if len(g) == 1:
-        return g[0]
+    paths_list = glob.glob(pattern)
+    if len(paths_list) == 1:
+        return paths_list[0]
     else:
-        return g
+        return paths_list

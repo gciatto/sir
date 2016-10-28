@@ -5,32 +5,44 @@ from gi.repository import Gtk
 from gi.repository import GLib
 from gi.repository import cairo
 from gciatto.gi.mouse import HighLevelMouseObservable
-from functools import lru_cache
 from cmath import phase
 from res import paths
-
-U = 50
-
-@lru_cache()
-def zoom(x):
-    return 2 ** (x / 50)
+from threading import Thread
+from gciatto.gi.drawing import *
+from math import radians
+import time
 
 
-class InspectorGui:
-    def __init__(self, canvas):
+
+
+class InspectorModel:
+    def __init__(self, initial_pose=complex(0, 0), initial_bearing=.0):
+        self.origin = initial_pose
+        self.orientation = initial_bearing
+        self.pose = initial_pose
+        self.bearing = initial_bearing
+        self.mean_pose = initial_pose
+        self.mean_bearing = initial_bearing
+        self.obstacles = ()
+
+
+class InspectorController:
+
+    def __init__(self, canvas, model: InspectorModel):
         super().__init__()
-        self.canvas = canvas
-        self.size = complex(0, 0)
-        self.center = complex(0, 0)
-        self.scroll = 0
-        self.canvas_mouse_listener = HighLevelMouseObservable(
+        self._model = model
+        self._canvas = canvas
+        self._size = complex(0, 0)
+        self._center = complex(0, 0)
+        self._scroll = 0
+        self._rotation = 0
+        self._canvas_mouse_listener = HighLevelMouseObservable(
             drag=self.on_canvas_drag_notify_event,
             released=self.on_canvas_button_clicked
         )
-        self.rotation = 0
 
-    def _redraw(self):
-        self.canvas.queue_draw()
+    def redraw(self):
+        self._canvas.queue_draw()
         return True
 
     def _get_mouse_pressed(self):
@@ -40,64 +52,81 @@ class InspectorGui:
         Gtk.main_quit(*args)
 
     def on_canvas_draw(self, canvas, cc: cairo.Context):
-        print("[canvas] draw")
+        self._draw_world(canvas, cc)
 
-        cc.translate(self.center.real, self.center.imag)
-        zoom_factor = zoom(self.scroll)
-        cc.scale(zoom_factor, -zoom_factor)
-        cc.rotate(-self.rotation)
+        cc.save()
+        cc.set_source_rgb(0, 1, 0)
+        self._draw_actual_robot(canvas, cc)
+        cc.restore()
 
-        cc.move_to(-U, 0)
-        cc.line_to(10 * U, 0)
-        cc.move_to(0, -U)
-        cc.line_to(0, 10 * U)
-        cc.stroke()
+        cc.save()
+        cc.set_source_rgb(0, 0, 1)
+        self._draw_frame(canvas, cc)
+        cc.restore()
+
         return True
 
+    def _draw_world(self, canvas, cc: cairo.Context):
+        cc.translate(self._center.real, self._center.imag)
+        zoom_factor = zoom(self._scroll)
+        cc.scale(zoom_factor, -zoom_factor)
+        cc.rotate(-self._rotation)
+
+        draw_axes(canvas, cc)
+
+    def _draw_frame(self, canvas, cc):
+        cc.translate(self._model.origin.real, self._model.origin.imag)
+        cc.rotate(self._model.orientation)
+
+        draw_axes(canvas, cc)
+
+    def _draw_actual_robot(self, canvas, cc):
+        cc.translate(self._model.pose.real, self._model.pose.imag)
+        cc.rotate(self._model.bearing)
+
+        draw_active(canvas, cc)
+
     def on_canvas_size_allocate(self, canvas, rect):
-        self.size = complex(rect.width, rect.height)
-        self.center = self.size / 2
-        print("[canvas] resize: %sx%s" % (rect.width, rect.height))
+        self._size = complex(rect.width, rect.height)
+        self._center = self._size / 2
 
     def on_canvas_motion_notify_event(self, canvas, event):
-        return self.canvas_mouse_listener.on_mouse_movement(canvas, event)
+        return self._canvas_mouse_listener.on_mouse_movement(canvas, event)
 
     def on_canvas_drag_notify_event(self, canvas, button, curr, prev, initial):
-        print("[canvas] drag: (%s; %s)" % (prev.real, prev.imag))
-        center = self.center
+        center = self._center
         if button == 1:
-            self.center += curr - prev
-            self._redraw()
+            self._center += curr - prev
+            self.redraw()
             return True
         elif button == 3:
             if prev == center:
-                self.rotation += phase(curr - center)
+                self._rotation += phase(curr - center)
             else:
-                self.rotation += phase((curr - center) / (prev - center))
-            self._redraw()
+                self._rotation += phase((curr - center) / (prev - center))
+            self.redraw()
             return True
         else:
             return False
 
     def on_canvas_button_clicked(self, canvas, button, current):
         if button == 2:
-            self.center = self.size / 2
-            self.scroll = 0
-            self.rotation = 0
-            self._redraw()
+            self._center = self._size / 2
+            self._scroll = 0
+            self._rotation = 0
+            self.redraw()
         return True
 
     def on_canvas_scroll_event(self, canvas, event):
-        self.scroll += event.delta_y
-        print("[canvas] scroll: (%s; %s)" % (event.delta_x, event.delta_y))
-        self._redraw()
+        self._scroll += event.delta_y
+        self.redraw()
         return True
 
     def on_canvas_button_press_event(self, canvas, event):
-        return self.canvas_mouse_listener.on_mouse_button_pressed(canvas, event)
+        return self._canvas_mouse_listener.on_mouse_button_pressed(canvas, event)
 
     def on_canvas_button_release_event(self, canvas, event):
-        return self.canvas_mouse_listener.on_mouse_button_released(canvas, event)
+        return self._canvas_mouse_listener.on_mouse_button_released(canvas, event)
 
     def on_canvas_key_press_event(self, window, event):
         print("[canvas] key pressed %d '%s'" % (event.keyval, event.string))
@@ -124,14 +153,45 @@ class InspectorGui:
         return False
 
 
-builder = Gtk.Builder()
-builder.add_from_file(paths(ext='.glade'))
+class InspectorGui(Thread):
+    def __init__(self, initial_pose=complex(0, 0), initial_bearing=.0):
+        super().__init__(target=self._main, name="inspector-gui", daemon=True)
+        # self.canvas = None
+        self._controller = None
+        # self.window = None
+        self._model = InspectorModel(initial_pose, initial_bearing)
 
-canvas = builder.get_object("canvas")
+    def _main(self):
+        builder = Gtk.Builder()
+        builder.add_from_file(paths(ext='.glade'))
 
-builder.connect_signals(InspectorGui(canvas))
+        canvas = builder.get_object("canvas")
+        self._controller = InspectorController(canvas, self._model)
+        builder.connect_signals(self._controller)
 
-window = builder.get_object("main_window")
-window.show_all()
+        window = builder.get_object("main_window")
+        window.show_all()
 
-Gtk.main()
+        Gtk.main()
+
+    def notify(self, **kwargs):
+        GLib.idle_add(lambda: self._notify(**kwargs))
+
+    def _notify(self, **kwargs):
+        if 'pose' in kwargs:
+            self._model.pose = kwargs['pose']
+        if 'bearing' in kwargs:
+            self._model.bearing = kwargs['bearing']
+
+        self._controller.redraw()
+
+
+if __name__ == "__main__":
+    t = InspectorGui(100 + 100j, radians(10))
+    t.start()
+
+    for x in range(1, 1000):
+        t.notify(pose=complex(100 + x, 100 + x), bearing=radians(10 + x))
+        time.sleep(1/30)
+
+    t.join()
