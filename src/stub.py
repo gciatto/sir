@@ -11,10 +11,16 @@ import logging
 import sys
 from sir.client.controller import SirRobotController as Controller
 from sir.client.strategies.behaviors import *
+from sir.client.inspector.gui import InspectorGui
+from sir.const import ROBOT_INITIAL_POSITION, ROBOT_INITIAL_ROTATION
+from math import radians
+import sys
 
 logger = logging.getLogger("morse.client")
 logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.DEBUG)
+
+gui = any(map(lambda x: x == "-gui", sys.argv))
 
 try:
     from pymorse import Morse
@@ -25,15 +31,41 @@ except ImportError:
 frequency = 2  # Hz
 step_duration = 1 / frequency  # seconds
 
+
+class SirInspectorGui(InspectorGui):
+    def __init__(self, initial_pose=complex(0, 0), initial_bearing=.0):
+        super().__init__(initial_pose, initial_bearing)
+
+    def notify(self, sensors, believes, actuators, dt):
+        pose = sensors['pose']
+        super().notify(
+            pose=complex(pose['x'], pose['y']),
+            bearing=pose['yaw']
+        )
+
+
 try:
+    inspector = None
+    if gui:
+        initial_pose = complex(*ROBOT_INITIAL_POSITION[0:2])
+        initial_bearing = radians(ROBOT_INITIAL_ROTATION[2])
+        inspector = SirInspectorGui(initial_pose, initial_bearing)
+
     with Morse() as simulation:
         try:
+            if gui:
+                inspector.start()
+
             motion = simulation.robot.motion
             pose = simulation.robot.pose
             laser = simulation.robot.laser
             odometry = simulation.robot.odometry
 
-            controller = Controller(simulation.robot.name + "_controller", logger=logger)
+            controller = Controller(
+                name=simulation.robot.name + "_controller",
+                logger=logger,
+                inspector=inspector.notify if inspector is not None else None
+            )
 
             controller.add_behavior(go_on()) \
                 .add_behavior(obstacle_avoidance())

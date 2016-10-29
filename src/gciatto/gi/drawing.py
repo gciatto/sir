@@ -15,7 +15,7 @@ def draw_axes(canvas, cc, axis_units=10):
     cc.stroke()
 
 
-Or = 5
+Or = 15
 
 
 def draw_active(canvas, cc, radius_units=1):

@@ -22,7 +22,7 @@ class AbstractRobotController:
 
     _used_names = set()
 
-    def __init__(self, name, logger=logger):
+    def __init__(self, name, logger=logger, inspector=None):
         if name in AbstractRobotController._used_names:
             raise Exception("Name `%s` already used" % name)
         else:
@@ -31,6 +31,7 @@ class AbstractRobotController:
         self._sensors = dict()
         self._believes = dict()
         self._actuators = dict()
+        self._inspect = inspector
         self.logger = logger.getChild("controllers." + name)
 
     def __del__(self):
@@ -87,6 +88,8 @@ class AbstractRobotController:
         self._inject_sensors_data(**sensors_data)
         self._update_believes(self._sensors, self._believes, dt)
         self._update_actuators(self._believes, self._actuators, dt)
+        if self._inspect is not None:
+            self._inspect(self._sensors, self._believes, self._actuators, dt)
         return self._actuators
 
     def add_behavior(self, behavior):

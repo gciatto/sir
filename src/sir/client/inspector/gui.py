@@ -1,9 +1,12 @@
 import gi
+from morse.builder.bpymorse import properties
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 from gi.repository import GLib
 from gi.repository import cairo
+
+from collections import namedtuple
 from gciatto.gi.mouse import HighLevelMouseObservable
 from cmath import phase
 from res import paths
@@ -13,6 +16,28 @@ from math import radians
 import time
 
 
+class MeanAdapter:
+
+    def _get_pose(self) -> complex:
+        return complex(0, 0)
+
+    def _get_bearing(self) -> float:
+        return 0
+
+    def _get_covariances(self):
+        return ((1, 0), (0, 1))
+
+    @property
+    def pose(self) -> complex:
+        return self._get_pose()
+
+    @property
+    def bearing(self) -> float:
+        return self._get_bearing()
+
+    @property
+    def covariances(self):
+        return self._get_covariances()
 
 
 class InspectorModel:
@@ -21,9 +46,8 @@ class InspectorModel:
         self.orientation = initial_bearing
         self.pose = initial_pose
         self.bearing = initial_bearing
-        self.mean_pose = initial_pose
-        self.mean_bearing = initial_bearing
-        self.obstacles = ()
+        self.state = MeanAdapter()
+        self.landmarks = ()
 
 
 class InspectorController:
@@ -53,17 +77,7 @@ class InspectorController:
 
     def on_canvas_draw(self, canvas, cc: cairo.Context):
         self._draw_world(canvas, cc)
-
-        cc.save()
-        cc.set_source_rgb(0, 1, 0)
-        self._draw_actual_robot(canvas, cc)
-        cc.restore()
-
-        cc.save()
-        cc.set_source_rgb(0, 0, 1)
         self._draw_frame(canvas, cc)
-        cc.restore()
-
         return True
 
     def _draw_world(self, canvas, cc: cairo.Context):
@@ -74,17 +88,36 @@ class InspectorController:
 
         draw_axes(canvas, cc)
 
+        self._draw_actual_robot(canvas, cc)
+
     def _draw_frame(self, canvas, cc):
+        cc.save()
+        cc.set_source_rgb(0, 0, 1)
+
         cc.translate(self._model.origin.real, self._model.origin.imag)
         cc.rotate(self._model.orientation)
 
         draw_axes(canvas, cc)
+        cc.restore()
 
     def _draw_actual_robot(self, canvas, cc):
+        cc.save()
+        cc.set_source_rgb(0, 1, 0)
         cc.translate(self._model.pose.real, self._model.pose.imag)
         cc.rotate(self._model.bearing)
 
         draw_active(canvas, cc)
+        cc.restore()
+
+    def _draw_expected_obstacles(self, canvas, cc):
+        cc.save()
+        cc.set_source_rgb(1, 0, 0)
+        for lmk in self._model.landmarks:
+            cc.save()
+            cc.translate(lmk.pose.real, lmk.pose.imag)
+            draw_passive(canvas, cc)
+            cc.restore()
+        cc.restore()
 
     def on_canvas_size_allocate(self, canvas, rect):
         self._size = complex(rect.width, rect.height)
@@ -159,7 +192,7 @@ class InspectorGui(Thread):
         # self.canvas = None
         self._controller = None
         # self.window = None
-        self._model = InspectorModel(initial_pose, initial_bearing)
+        self._model = InspectorModel(initial_pose * U, initial_bearing)
 
     def _main(self):
         builder = Gtk.Builder()
@@ -179,10 +212,9 @@ class InspectorGui(Thread):
 
     def _notify(self, **kwargs):
         if 'pose' in kwargs:
-            self._model.pose = kwargs['pose']
+            self._model.pose = kwargs['pose'] * U
         if 'bearing' in kwargs:
             self._model.bearing = kwargs['bearing']
-
         self._controller.redraw()
 
 

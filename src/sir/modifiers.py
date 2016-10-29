@@ -1,10 +1,11 @@
 import logging
-from morse.modifiers.abstract_modifier import AbstractModifier
-from sir.const.odometry import *
-from sir.const.laser import *
 from random import gauss
+
+from morse.modifiers.abstract_modifier import AbstractModifier
+
 from gciatto.utils import *
-from collections import namedtuple
+from sir.const import LASER_RANGE_STDEV, LASER_HORIZONTAL_ANGLE_STDEV, LASER_VERTICAL_ANGLE_STDEV, ODOMETRY_DX_STDEV, \
+    ODOMETRY_DY_STDEV, ODOMETRY_DZ_STDEV, ODOMETRY_DYAW_STDEV, ODOMETRY_DROLL_STDEV, ODOMETRY_DPITCH_STDEV
 
 _L = logging.getLogger("morse." + __name__)
 
@@ -12,13 +13,13 @@ _L = logging.getLogger("morse." + __name__)
 class OdometryZeroMeanGaussianNoiseModifier(AbstractModifier):
 
     def initialize(self):
-        self._dx_stdev = float(self.parameter("dx_stdev", default=DX_STDEV))
-        self._dy_stdev = float(self.parameter("dy_stdev", default=DY_STDEV))
-        self._dz_stdev = float(self.parameter("dz_stdev", default=DZ_STDEV))
+        self._dx_stdev = float(self.parameter("dx_stdev", default=ODOMETRY_DX_STDEV))
+        self._dy_stdev = float(self.parameter("dy_stdev", default=ODOMETRY_DY_STDEV))
+        self._dz_stdev = float(self.parameter("dz_stdev", default=ODOMETRY_DZ_STDEV))
 
-        self._dpitch_stdev = float(self.parameter("dpitch_stdev", default=DPITCH_STDEV))
-        self._droll_stdev = float(self.parameter("droll_stdev", default=DROLL_STDEV))
-        self._dyaw_stdev = float(self.parameter("dyaw_stdev", default=DYAW_STDEV))
+        self._dpitch_stdev = float(self.parameter("dpitch_stdev", default=ODOMETRY_DPITCH_STDEV))
+        self._droll_stdev = float(self.parameter("droll_stdev", default=ODOMETRY_DROLL_STDEV))
+        self._dyaw_stdev = float(self.parameter("dyaw_stdev", default=ODOMETRY_DYAW_STDEV))
 
     def modify(self):
         try:
@@ -49,9 +50,9 @@ class LaserZeroMeanGaussianNoiseModifier(AbstractModifier):
     # _LaserDatum = namedtuple("LaserDatum", ('rho', 'theta', 'phi'))
 
     def initialize(self):
-        self._drho_stdev = float(self.parameter("drho_stdev", default=RANGE_STDEV))
-        self._dtheta_stdev = float(self.parameter("dtheta_stdev", default=HORIZONTAL_ANGLE_STDEV))
-        self._dphi_stdev = float(self.parameter("dphi_stdev", default=VERTICAL_ANGLE_STDEV))
+        self._drho_stdev = float(self.parameter("drho_stdev", default=LASER_RANGE_STDEV))
+        self._dtheta_stdev = float(self.parameter("dtheta_stdev", default=LASER_HORIZONTAL_ANGLE_STDEV))
+        self._dphi_stdev = float(self.parameter("dphi_stdev", default=LASER_VERTICAL_ANGLE_STDEV))
 
     def modify(self):
 

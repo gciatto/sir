@@ -1,0 +1,20 @@
+from math import radians
+
+ROBOT_INITIAL_POSITION = (-7.45, 7.10, 0.06)
+ROBOT_INITIAL_ROTATION = (0.0, 0.0, 0)
+
+LASER_RANGE = 5  # meters
+LASER_SCAN_WINDOW = 360  # degrees
+LASER_RESOLUTION = 5  # degrees
+LASER_FREQUENCY = 5  # Hz
+LASER_ARC_VISIBLE = True  # shows the perceived arc within simulation
+LASER_RANGE_STDEV = 0.0025  # 2.5 cm
+LASER_HORIZONTAL_ANGLE_STDEV = radians(LASER_RESOLUTION / 2)  # 2°
+LASER_VERTICAL_ANGLE_STDEV = radians(1)  # 1°
+
+ODOMETRY_DX_STDEV = 0.001  # 1mm
+ODOMETRY_DY_STDEV = 0.001  # 1mm
+ODOMETRY_DZ_STDEV = 0.0001  # 1mm
+ODOMETRY_DYAW_STDEV = radians(1)  # 1°
+ODOMETRY_DROLL_STDEV = radians(1)  # 1°
+ODOMETRY_DPITCH_STDEV = radians(1)  # 1°
