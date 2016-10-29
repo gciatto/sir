@@ -6,7 +6,6 @@ Feel free to edit this template as you like!
 """
 # from morse.robots.quadrotor import
 from morse.builder import *
-
 from sir.const import *
 
 robot = ATRV()
@@ -46,7 +45,7 @@ robot.rotate(*ROBOT_INITIAL_ROTATION)
 
 robot.add_default_interface('socket')
 
-env = Environment('indoors-1/indoor-1', fastmode=True)
+env = Environment('./res/arenas/boxes.blend', fastmode=True)
 env.set_time_scale()
 # env = Environment('tum_kitchen/tum_kitchen', fastmode=True)
 env.set_camera_location([0, 0, 40])

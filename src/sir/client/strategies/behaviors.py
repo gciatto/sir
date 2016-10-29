@@ -38,3 +38,7 @@ def obstacle_avoidance(window=pi/2):
             self.set_velocity(theta=new_theta + prev_theta / 2)
 
     return _obstacle_avoidance
+
+
+def extended_kalman_filter(self, believes: dict, actuators: dict, dt: float):
+    pass

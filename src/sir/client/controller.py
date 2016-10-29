@@ -106,6 +106,7 @@ class AbstractRobotController:
 
 PointOfInterest = namedtuple('PointOfInterest', ['rho', 'theta', 'phi', 'x', 'y', 'z'])
 Speed = namedtuple('Speed', ['x', 'y', 'theta'])
+Variation = namedtuple('Variation', ['dx', 'dy', 'dtheta'])
 
 
 def _cartesian_to_poi(p):
@@ -134,6 +135,18 @@ class SirRobotController(AbstractRobotController):
 
         self._extract_obstacles()
         self.logger.debug("Obstacles: %s", self.get_obstacles())
+
+        believes['odometry'] = tuple(
+            map(
+                lambda v: Variation(v['dx'], v['dy'], v['dyaw']),
+                sensors['odometry']
+            )
+        )
+
+        self.logger.debug("Odometry: %s", self.get_odometry())
+
+    def get_odometry(self):
+        return self._believes['odometry']
 
     def _extract_obstacles(self):
         self._obstacles_extractor.extract_obstacles()
