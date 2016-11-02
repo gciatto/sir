@@ -146,7 +146,7 @@ def add_new_landmark(state, covariances, landmark, landmark_covariances):
     return (state_size - 3) // 2, state, covariances
 
 
-# This is wrong
+# TODO cambiare strategia: scansionare ogni landmark per vedere se il candidato si trova all'interno di un ellissoide d'errore
 def classification(state, covariances, observation, delta=Delta, threshold=3):
     landmark_candidate = inv_observe(state, observation)
 
@@ -260,8 +260,9 @@ def extended_kalman_filter_2d(controller, believes: dict, actuators: dict, dt: f
         covariances = zeros((3, 3))
         believes['expected_state_covariance_matrix'] = covariances
 
+    bel_odometry = believes['odometry']
     prev_update = believes['last_control_timestamp'] if 'last_control_timestamp' in believes else 0
-    curr_update = believes['odometry']['timestamp']
+    curr_update = bel_odometry['timestamp'] if bel_odometry is not None and 'timestamp' in bel_odometry else 0
 
     control = array(controller.get_odometry())
     obstacles = [array(o[0:2]) for o in controller.get_obstacles()]

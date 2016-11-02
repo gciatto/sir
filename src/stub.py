@@ -43,7 +43,6 @@ class SirInspectorGui(InspectorGui):
             bearing=pose['yaw']
         )
 
-
 try:
     inspector = None
     if gui:
@@ -73,14 +72,16 @@ try:
 
             tprev = tend = 0
 
+            odometry.subscribe(lambda o: controller.inject_sensors_data(odometry=o))
+
             while True:
                 sensor_data = dict()
                 tprev = tend
                 t0 = simulation.time()
                 sensor_data['laser'] = laser.get_local_data().result()
                 t1 = simulation.time()
-                sensor_data['odometry'] = odometry.get_local_data().result()
-                t2 = simulation.time()
+                # sensor_data['odometry'] = odometry.get_local_data().result()
+                # t2 = simulation.time()
                 sensor_data['pose'] = pose.get_local_data().result()
                 t3 = simulation.time()
                 act = controller.control_step(tend - tprev, **sensor_data)

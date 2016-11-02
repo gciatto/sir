@@ -136,12 +136,16 @@ class SirRobotController(AbstractRobotController):
         self._extract_obstacles()
         self.logger.debug("Obstacles: %s", self.get_obstacles())
 
-        believes['odometry'] = sensors['odometry']
+        believes['odometry'] = sensors['odometry'] if 'odometry' in sensors else None
 
         self.logger.debug("Odometry: %s", self.get_odometry())
 
     def get_odometry(self):
-        return (lambda v: Variation(v['dx'], v['dy'], v['dyaw']))(self._believes['odometry'])
+        data = self._believes['odometry']
+        if data is None:
+            return Variation(0, 0, 0)
+        else:
+            return Variation(data['dx'], data['dy'], data['dyaw'])
 
     def _extract_obstacles(self):
         self._obstacles_extractor.extract_obstacles()
