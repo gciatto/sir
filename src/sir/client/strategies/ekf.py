@@ -1,4 +1,4 @@
-from numpy import array, matrix, zeros, diag, eye, cos, sin, sqrt, hstack, vstack
+from numpy import array, matrix, zeros, diag, eye, cos, sin, sqrt, hstack, vstack, arctan2
 from numpy.linalg import inv
 
 from sir.const import ODOMETRY_DX_STDEV as epsilon_x, \
@@ -21,37 +21,9 @@ def mahalonobis(x, y, covariances=None, inverse=None):
     )
 
 
-def movement(state, control):
-    return state[0:3] + control[0:3]
-
-def jacobian_of_movement_wrt_state(state, control):
-    return eye(3)
-
-
-def jacobian_of_movement_wrt_control(state, control):
-    return eye(3)
-
-
-def prediction(state, covariances, control, epsilon=Epsilon):
-    state[0:3] = movement(state, control)
-
-    jacobian_state = jacobian_of_movement_wrt_state(state, control)
-    jacobian_control = jacobian_of_movement_wrt_control(state, control)
-    covariances[0:3, 0:3] = jacobian_state.dot(covariances[0:3, 0:3]).dot(jacobian_state.transpose()) + \
-                            jacobian_control.dot(epsilon).dot(jacobian_control.transpose())
-
-
-def landmarks(state, covariances=None):
-    tot = len(state)
-    if tot <= 3:
-        yield (-1,)
-    else:
-        for i in range(3, tot, 2):
-            index = (i - 3) // 2
-            if covariances is not None:
-                yield (index, state[i:i+2], covariances[i:i+2, i:i+2])
-            else:
-                yield (index, state[i:i+2])
+def vector(*args, **kwargs):
+    a = array(*args, **kwargs)
+    return a.reshape(len(a), 1)
 
 
 def rotation_matrix(angle):
@@ -61,7 +33,65 @@ def rotation_matrix(angle):
     )
 
 
-def inverse_observation(state, observation):
+def move(state, control):
+    return state[0:3] + control[0:3]
+
+
+def jacobian_of_move_wrt_state(state, control):
+    return eye(3)
+
+
+def jacobian_of_move_wrt_control(state, control):
+    return eye(3)
+
+
+def prediction(state, covariances, control, epsilon=Epsilon):
+    state[0:3] = move(state, control)
+
+    jacobian_state = jacobian_of_move_wrt_state(state, control)
+    jacobian_control = jacobian_of_move_wrt_control(state, control)
+    covariances[0:3, 0:3] = jacobian_state.dot(covariances[0:3, 0:3]).dot(jacobian_state.transpose()) + \
+                            jacobian_control.dot(epsilon).dot(jacobian_control.transpose())
+
+    return state, covariances
+
+
+def count_landmarks(state):
+    return (len(state) - 3) // 2
+
+
+def get_landmark(index, state, covariances=None, columns=False):
+    inner_index = index * 2 + 3
+    if covariances is None:
+        return index, \
+               state[inner_index: inner_index + 2]
+    elif columns:
+        return index, \
+               state[inner_index: inner_index + 2], \
+               covariances[inner_index: inner_index + 2, inner_index: inner_index + 2], \
+               covariances[:, inner_index: inner_index + 2]
+    else:
+        return index, \
+               state[inner_index: inner_index + 2], \
+               covariances[inner_index: inner_index + 2, inner_index: inner_index + 2]
+
+
+def landmarks(state, covariances=None, columns=False):
+    n = count_landmarks(state)
+
+    if n == 0:
+        if covariances is None:
+            yield -1,
+        elif columns:
+            yield -1, None, None
+        else:
+            yield -1, None
+    else:
+        for i in range(0, n):
+            yield get_landmark(state, covariances, columns)
+
+
+def inv_observe(state, observation):
     r = observation[0]
     alpha = observation[1]
     pose = state[0:2]
@@ -70,7 +100,7 @@ def inverse_observation(state, observation):
     return pose + rotation_matrix(theta).dot(local_vector)
 
 
-def jacobian_of_inv_obs_wrt_state(state, observation):
+def jacobian_of_inv_observe_wrt_state(state, observation):
     r, alpha = observation
     theta = state[2]
     return matrix(
@@ -79,7 +109,7 @@ def jacobian_of_inv_obs_wrt_state(state, observation):
     )
 
 
-def jacobian_of_inv_obs_wrt_sensor(state, observation):
+def jacobian_of_inv_observe_wrt_sensor(state, observation):
     r, alpha = observation
     theta = state[2]
     c = cos(alpha + theta)
@@ -103,10 +133,10 @@ def add_new_landmark(state, covariances, landmark, landmark_covariances):
 
 
 def classification(state, covariances, observation, delta=Delta, threshold=3):
-    landmark_candidate = inverse_observation(state, observation)
+    landmark_candidate = inv_observe(state, observation)
 
-    jacobian_state = jacobian_of_inv_obs_wrt_state(state, observation)
-    jacobian_sense = jacobian_of_inv_obs_wrt_sensor(state, observation)
+    jacobian_state = jacobian_of_inv_observe_wrt_state(state, observation)
+    jacobian_sense = jacobian_of_inv_observe_wrt_sensor(state, observation)
 
     state_cov = covariances[0:3, 0:3]
 
@@ -125,6 +155,79 @@ def classification(state, covariances, observation, delta=Delta, threshold=3):
     return add_new_landmark(state, covariances, landmark_candidate, candidate_covariances)
 
 
+def observe(state, landmark):
+    x, y, theta = state
+    x_lmk, y_lmk = landmark
+    dx = x_lmk - x
+    dy = y_lmk - y
+    q2 = dx * dx + dy * dy
+    return array([
+        sqrt(q2),
+        arctan2(dy, dx) - theta
+    ])
+
+
+def jacobian_observation_wrt_state(state, landmark):
+    x, y, theta = state
+    x_lmk, y_lmk = landmark
+    dx = x_lmk - x
+    dy = y_lmk - y
+    q2 = dx * dx + dy * dy
+    q = sqrt(q2)
+    return matrix(
+        [[-dx / q, -dy / q, 0],
+         [dy / q2, -dx / q2, -1]]
+    )
+
+
+def jacobian_observation_wrt_landmark(state, landmark, jacobian_wrt_state=None):
+    if jacobian_wrt_state is None:
+        x, y, theta = state
+        x_lmk, y_lmk = landmark
+        dx = x_lmk - x
+        dy = y_lmk - y
+        q2 = dx * dx + dy * dy
+        q = sqrt(q2)
+        return matrix(
+            [[dx / q, dy / q],
+             [-dy / q2, dx / q2]]
+        )
+    else:
+        return jacobian_wrt_state[0:2, 0:2] * -1
+
+
+def correction(state, covariances, sensor_observation, landmark_index, landmark, landmark_covariances, landmark_columns,
+               delta=Delta):
+    offset = sensor_observation - observe(state, landmark)
+
+    jacobian_state = jacobian_observation_wrt_state(state, landmark)
+    jacobian_landmark = jacobian_observation_wrt_landmark(state, landmark, jacobian_state)
+    mini_jacobian = hstack(jacobian_state, jacobian_landmark)
+    mini_jacobian_transpose = mini_jacobian.transpose()
+
+    landmark_columns_transpose = landmark_columns.transpose()
+    mini_covariances = hstack([
+        hstack([
+            covariances[0:3, 0:3],
+            landmark_columns[0:3, :]]
+        ),
+        zeros([2, 5])
+    ])
+    mini_covariances[3:5, 0:3] = landmark_columns_transpose[:, 0:3]
+    mini_covariances[3:, 3:] = landmark_covariances
+    offset_covariances = delta + mini_jacobian.dot(mini_covariances.dot(mini_jacobian_transpose))
+    inv_offset_covariances = inv(offset_covariances)
+
+    long_covariances = hstack([
+        covariances[:, 0:3],
+        landmark_columns
+    ])
+    kalman_gain = long_covariances.dot(mini_jacobian_transpose.dot(inv_offset_covariances))
+
+    new_state = state + kalman_gain.dot(offset)
+    new_covariances = covariances - kalman_gain.dot(offset_covariances.dot(kalman_gain.transpose()))
+
+    return new_state, new_covariances
 
 
 def extended_kalman_filter_2d(controller, believes: dict, actuators: dict, dt: float):
@@ -134,17 +237,29 @@ def extended_kalman_filter_2d(controller, believes: dict, actuators: dict, dt: f
         state = zeros(3)
         believes['expected_state'] = state
 
-    if 'state_covariance_matrix' in believes:
-        covariances = believes['state_covariance_matrix']
+    if 'expected_state_covariance_matrix' in believes:
+        covariances = believes['expected_state_covariance_matrix']
     else:
         covariances = zeros((3, 3))
-        believes['state_covariance_matrix'] = covariances
+        believes['expected_state_covariance_matrix'] = covariances
 
     control = array(controller.get_odometry())
-    obstacles = [array(o[0:3]) for o in controller.get_obstacles()]
+    obstacles = [array(o[0:2]) for o in controller.get_obstacles()]
 
-    _extended_kalman_filter_2d(state, covariances, control, obstacles)
+    state, covariances = _extended_kalman_filter_2d(state, covariances, control, obstacles)
+
+    believes['expected_state'] = state
+    believes['expected_state_covariance_matrix'] = covariances
 
 
 def _extended_kalman_filter_2d(state, covariances, control, observations):
-    pass
+    state, covariances = prediction(state, covariances, control)
+
+    for observation in observations:
+        index, state, covariances = classification(state, covariances, observation)
+
+        index, landmark, landmark_covariances, landmark_columns = get_landmark(index, state, covariances, columns=True)
+
+        state, covariances = correction(state, covariances, index, landmark, landmark_covariances, landmark_columns)
+
+    return state, covariances
