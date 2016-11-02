@@ -23,6 +23,7 @@ laser.translate(0, 0, 0.715)
 robot.append(laser)
 
 odometry = Odometry()
+odometry.properties(frequency=1)
 odometry.level('differential')
 odometry.alter('', 'sir.modifiers.OdometryZeroMeanGaussianNoiseModifier')
 odometry.translate(0, 0, 0.5)
@@ -36,7 +37,7 @@ robot.append(keyboard)
 keyboard.properties(ControlType='Position')
 
 pose = Pose()
-keyboard.properties(frequency=10)
+# pose.properties(frequency=1)
 robot.append(pose)
 
 # {'roll': -1.0039110520665417e-07, 'yaw': -0.00026614448870532215, 'timestamp': 1477327740.063312, 'x': -7.427310466766357, 'pitch': 9.00480685572802e-08, 'y': 7.127953052520752, 'z': 0.059999980032444}

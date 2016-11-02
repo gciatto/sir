@@ -68,7 +68,8 @@ try:
             )
 
             controller.add_behavior(go_on()) \
-                .add_behavior(obstacle_avoidance())
+                .add_behavior(obstacle_avoidance()) \
+                .add_behavior(extended_kalman_filter())
 
             tprev = tend = 0
 

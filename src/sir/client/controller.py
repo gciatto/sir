@@ -41,7 +41,7 @@ class AbstractRobotController:
     def name(self):
         return self._name
 
-    def _inject_sensors_data(self, **sensors_data):
+    def inject_sensors_data(self, **sensors_data):
         """
         Permette a un entità esterna di iniettare i dati sensoriali, eventualmente sostituendo quelli precedenti
         :param sensors_data: coppie chiave-valore dove la chiave rappresenta il sensore e il valore il suo nuovo dato
@@ -85,7 +85,7 @@ class AbstractRobotController:
         :param sensors_data: i dati sensorali da iniettare
         :return: i dati aggiornati da inviare agli attuatori
         """
-        self._inject_sensors_data(**sensors_data)
+        self.inject_sensors_data(**sensors_data)
         self._update_believes(self._sensors, self._believes, dt)
         self._update_actuators(self._believes, self._actuators, dt)
         if self._inspect is not None:
@@ -136,17 +136,12 @@ class SirRobotController(AbstractRobotController):
         self._extract_obstacles()
         self.logger.debug("Obstacles: %s", self.get_obstacles())
 
-        believes['odometry'] = tuple(
-            map(
-                lambda v: Variation(v['dx'], v['dy'], v['dyaw']),
-                sensors['odometry']
-            )
-        )
+        believes['odometry'] = sensors['odometry']
 
         self.logger.debug("Odometry: %s", self.get_odometry())
 
     def get_odometry(self):
-        return self._believes['odometry']
+        return (lambda v: Variation(v['dx'], v['dy'], v['dyaw']))(self._believes['odometry'])
 
     def _extract_obstacles(self):
         self._obstacles_extractor.extract_obstacles()

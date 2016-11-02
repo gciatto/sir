@@ -1,4 +1,4 @@
-from numpy import array, matrix, zeros, diag, eye, cos, sin, sqrt, hstack, vstack, arctan2
+from numpy import array, matrix, zeros, diag, eye, cos, sin, sqrt, hstack, vstack, append, arctan2
 from numpy.linalg import inv
 
 from sir.const import ODOMETRY_DX_STDEV as epsilon_x, \
@@ -23,7 +23,11 @@ def mahalonobis(x, y, covariances=None, inverse=None):
 
 def vector(*args, **kwargs):
     a = array(*args, **kwargs)
-    return a.reshape(len(a), 1)
+    return a.reshape(a.size, 1)
+
+
+def rearray(numpy_obj):
+    return array(numpy_obj).reshape(numpy_obj.size)
 
 
 def rotation_matrix(angle):
@@ -53,11 +57,11 @@ def prediction(state, covariances, control, epsilon=Epsilon):
     covariances[0:3, 0:3] = jacobian_state.dot(covariances[0:3, 0:3]).dot(jacobian_state.transpose()) + \
                             jacobian_control.dot(epsilon).dot(jacobian_control.transpose())
 
-    return state, covariances
+    return rearray(state), covariances
 
 
 def count_landmarks(state):
-    return (len(state) - 3) // 2
+    return (state.size - 3) // 2
 
 
 def get_landmark(index, state, covariances=None, columns=False):
@@ -79,16 +83,8 @@ def get_landmark(index, state, covariances=None, columns=False):
 def landmarks(state, covariances=None, columns=False):
     n = count_landmarks(state)
 
-    if n == 0:
-        if covariances is None:
-            yield -1,
-        elif columns:
-            yield -1, None, None
-        else:
-            yield -1, None
-    else:
-        for i in range(0, n):
-            yield get_landmark(state, covariances, columns)
+    for i in range(0, n):
+        yield get_landmark(i, state, covariances, columns)
 
 
 def inv_observe(state, observation):
@@ -121,17 +117,36 @@ def jacobian_of_inv_observe_wrt_sensor(state, observation):
 
 
 def add_new_landmark(state, covariances, landmark, landmark_covariances):
-    state_size = len(state)
-    landmark_size = len(landmark)
-    state = vstack(state, landmark)
-    new_columns = zeros((state_size, landmark_size))
-    covariances = hstack(covariances, new_columns)
-    new_rows = hstack(zeros((landmark_size, state_size)), landmark_covariances)
-    covariances = vstack(covariances, new_rows)
+    state_size = state.size
+    landmark_size = landmark.size
+    state = append(
+        state,
+        landmark
+    )
+    new_columns = zeros([
+        state_size,
+        landmark_size
+    ])
+    covariances = hstack([
+        covariances,
+        new_columns
+    ])
+    new_rows = hstack([
+        zeros([
+            landmark_size,
+            state_size
+        ]),
+        landmark_covariances
+    ])
+    covariances = vstack([
+        covariances,
+        new_rows
+    ])
 
-    return ((state_size - 3) / 2, state, covariances)
+    return (state_size - 3) // 2, state, covariances
 
 
+# This is wrong
 def classification(state, covariances, observation, delta=Delta, threshold=3):
     landmark_candidate = inv_observe(state, observation)
 
@@ -140,8 +155,8 @@ def classification(state, covariances, observation, delta=Delta, threshold=3):
 
     state_cov = covariances[0:3, 0:3]
 
-    z1 = jacobian_state.dot(state_cov.dot(jacobian_state.traspose()))
-    z2 = jacobian_sense.dot(delta.dot(jacobian_sense.traspose()))
+    z1 = jacobian_state.dot(state_cov.dot(jacobian_state.transpose()))
+    z2 = jacobian_sense.dot(delta.dot(jacobian_sense.transpose()))
 
     candidate_covariances = z1 + z2
     candidate_inverse = inv(candidate_covariances)
@@ -156,7 +171,7 @@ def classification(state, covariances, observation, delta=Delta, threshold=3):
 
 
 def observe(state, landmark):
-    x, y, theta = state
+    x, y, theta = state[0:3]
     x_lmk, y_lmk = landmark
     dx = x_lmk - x
     dy = y_lmk - y
@@ -168,7 +183,7 @@ def observe(state, landmark):
 
 
 def jacobian_observation_wrt_state(state, landmark):
-    x, y, theta = state
+    x, y, theta = state[0:3]
     x_lmk, y_lmk = landmark
     dx = x_lmk - x
     dy = y_lmk - y
@@ -182,7 +197,7 @@ def jacobian_observation_wrt_state(state, landmark):
 
 def jacobian_observation_wrt_landmark(state, landmark, jacobian_wrt_state=None):
     if jacobian_wrt_state is None:
-        x, y, theta = state
+        x, y, theta = state[0:3]
         x_lmk, y_lmk = landmark
         dx = x_lmk - x
         dy = y_lmk - y
@@ -202,11 +217,13 @@ def correction(state, covariances, sensor_observation, landmark_index, landmark,
 
     jacobian_state = jacobian_observation_wrt_state(state, landmark)
     jacobian_landmark = jacobian_observation_wrt_landmark(state, landmark, jacobian_state)
-    mini_jacobian = hstack(jacobian_state, jacobian_landmark)
+    mini_jacobian = hstack([
+        jacobian_state, jacobian_landmark
+    ])
     mini_jacobian_transpose = mini_jacobian.transpose()
 
     landmark_columns_transpose = landmark_columns.transpose()
-    mini_covariances = hstack([
+    mini_covariances = vstack([
         hstack([
             covariances[0:3, 0:3],
             landmark_columns[0:3, :]]
@@ -227,7 +244,7 @@ def correction(state, covariances, sensor_observation, landmark_index, landmark,
     new_state = state + kalman_gain.dot(offset)
     new_covariances = covariances - kalman_gain.dot(offset_covariances.dot(kalman_gain.transpose()))
 
-    return new_state, new_covariances
+    return rearray(new_state), new_covariances
 
 
 def extended_kalman_filter_2d(controller, believes: dict, actuators: dict, dt: float):
@@ -243,13 +260,18 @@ def extended_kalman_filter_2d(controller, believes: dict, actuators: dict, dt: f
         covariances = zeros((3, 3))
         believes['expected_state_covariance_matrix'] = covariances
 
+    prev_update = believes['last_control_timestamp'] if 'last_control_timestamp' in believes else 0
+    curr_update = believes['odometry']['timestamp']
+
     control = array(controller.get_odometry())
     obstacles = [array(o[0:2]) for o in controller.get_obstacles()]
 
-    state, covariances = _extended_kalman_filter_2d(state, covariances, control, obstacles)
+    if curr_update > prev_update:
+        state, covariances = _extended_kalman_filter_2d(state, covariances, control, obstacles)
 
     believes['expected_state'] = state
     believes['expected_state_covariance_matrix'] = covariances
+    believes['last_control_timestamp'] = curr_update
 
 
 def _extended_kalman_filter_2d(state, covariances, control, observations):
@@ -260,6 +282,6 @@ def _extended_kalman_filter_2d(state, covariances, control, observations):
 
         index, landmark, landmark_covariances, landmark_columns = get_landmark(index, state, covariances, columns=True)
 
-        state, covariances = correction(state, covariances, index, landmark, landmark_covariances, landmark_columns)
+        state, covariances = correction(state, covariances, observation, index, landmark, landmark_covariances, landmark_columns)
 
     return state, covariances

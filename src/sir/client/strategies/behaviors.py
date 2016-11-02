@@ -1,6 +1,8 @@
+from sir.client.strategies.ekf import extended_kalman_filter_2d
 from math import pi
 half_pi = pi / 2
 twopi = 2 * pi
+
 
 def go_on(speed=1):
     def _go_on(self, believes: dict, actuators: dict, dt: float):
@@ -40,5 +42,5 @@ def obstacle_avoidance(window=pi/2):
     return _obstacle_avoidance
 
 
-def extended_kalman_filter(self, believes: dict, actuators: dict, dt: float):
-    pass
+def extended_kalman_filter():
+    return extended_kalman_filter_2d
