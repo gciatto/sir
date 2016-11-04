@@ -40,7 +40,7 @@ class OdometryZeroMeanGaussianNoiseModifier(AbstractModifier):
             self.data['dpitch'] += dpitch
             self.data['droll'] += droll
 
-            _L.info("%s Noise: (dx, dy, dtheta) += (%.1e, %.1e, %.1e)" % (self.component_name, dx, dy, dyaw))
+            _L.info("%s Noise: (dx, dy, dtheta) += (%.1e, %.1e, %.1e) --> (%.1e, %.1e, %.1e) " % (self.component_name, dx, dy, dyaw, self.data['dx'], self.data['dy'], self.data['dyaw']))
         except KeyError as detail:
             self.key_error(detail)
 

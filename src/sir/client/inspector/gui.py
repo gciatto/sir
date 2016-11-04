@@ -12,32 +12,28 @@ from cmath import phase
 from res import paths
 from threading import Thread
 from gciatto.gi.drawing import *
-from math import radians
+from math import radians, atan2
+from gciatto.stat.normal import error_ellipse
+from numpy import zeros, eye
+from random import gauss
 import time
 
+ErrorEllipse = namedtuple('ErrorEllipse', ['h_axis', 'v_axis', 'rotation'])
 
-class MeanAdapter:
 
-    def _get_pose(self) -> complex:
-        return complex(0, 0)
+class LandmarkAdapter:
+    def __init__(self, position=zeros(2), covariances=zeros((2, 2))):
+        self.pose = complex(*position)
+        sizes, axes = error_ellipse(covariances)
+        angle = atan2(axes[0, 1], axes[0, 0])
+        self.error_ellipse = ErrorEllipse(sizes[0], sizes[1], angle)
 
-    def _get_bearing(self) -> float:
-        return 0
 
-    def _get_covariances(self):
-        return ((1, 0), (0, 1))
-
-    @property
-    def pose(self) -> complex:
-        return self._get_pose()
-
-    @property
-    def bearing(self) -> float:
-        return self._get_bearing()
-
-    @property
-    def covariances(self):
-        return self._get_covariances()
+class StateAdapter(LandmarkAdapter):
+    def __init__(self, position=zeros(3), covariances=zeros((3, 3))):
+        super().__init__(position[0:2], covariances[0:2, 0:2])
+        self.bearing = position[2]
+        self.angle_error = covariances[2, 2]
 
 
 class InspectorModel:
@@ -46,12 +42,11 @@ class InspectorModel:
         self.orientation = initial_bearing
         self.pose = initial_pose
         self.bearing = initial_bearing
-        self.state = MeanAdapter()
+        self.state = StateAdapter()
         self.landmarks = ()
 
 
 class InspectorController:
-
     def __init__(self, canvas, model: InspectorModel):
         super().__init__()
         self._model = model
@@ -77,7 +72,6 @@ class InspectorController:
 
     def on_canvas_draw(self, canvas, cc: cairo.Context):
         self._draw_world(canvas, cc)
-        self._draw_frame(canvas, cc)
         return True
 
     def _draw_world(self, canvas, cc: cairo.Context):
@@ -88,33 +82,61 @@ class InspectorController:
 
         draw_axes(canvas, cc)
 
+        self._draw_frame(canvas, cc)
+
         self._draw_actual_robot(canvas, cc)
 
     def _draw_frame(self, canvas, cc):
         cc.save()
         cc.set_source_rgb(0, 0, 1)
 
-        cc.translate(self._model.origin.real, self._model.origin.imag)
+        origin = self._model.origin * U
+
+        cc.translate(origin.real, origin.imag)
         cc.rotate(self._model.orientation)
 
         draw_axes(canvas, cc)
+
+        self._draw_expected_robot(canvas, cc)
+
         cc.restore()
 
     def _draw_actual_robot(self, canvas, cc):
         cc.save()
-        cc.set_source_rgb(0, 1, 0)
-        cc.translate(self._model.pose.real, self._model.pose.imag)
+        cc.set_source_rgb(0, 0.5, 0)
+        pose = self._model.pose * U
+        cc.translate(pose.real, pose.imag)
         cc.rotate(self._model.bearing)
 
         draw_active(canvas, cc)
         cc.restore()
 
-    def _draw_expected_obstacles(self, canvas, cc):
+    def _draw_expected_robot(self, canvas, cc):
+        cc.save()
+        cc.set_source_rgba(0, 1, 0, 0.2)
+        state = self._model.state
+        pose = state.pose * U
+        cc.translate(pose.real, pose.imag)
+
+        fill_ellipse(canvas, cc, state.error_ellipse.h_axis * 3, state.error_ellipse.v_axis * 3,
+                     state.error_ellipse.rotation, U)
+
+        cc.rotate(state.bearing)
+
+        fill_arc(canvas, cc, state.angle_error)
+
+        cc.set_source_rgba(0, 1, 0, 1)
+        draw_active(canvas, cc)
+
+        cc.restore()
+
+    def _draw_landmarks(self, canvas, cc):
         cc.save()
         cc.set_source_rgb(1, 0, 0)
         for lmk in self._model.landmarks:
             cc.save()
-            cc.translate(lmk.pose.real, lmk.pose.imag)
+            pose = lmk.pose * U
+            cc.translate(pose.real, pose.imag)
             draw_passive(canvas, cc)
             cc.restore()
         cc.restore()
@@ -192,7 +214,7 @@ class InspectorGui(Thread):
         # self.canvas = None
         self._controller = None
         # self.window = None
-        self._model = InspectorModel(initial_pose * U, initial_bearing)
+        self._model = InspectorModel(initial_pose, initial_bearing)
 
     def _main(self):
         builder = Gtk.Builder()
@@ -211,19 +233,34 @@ class InspectorGui(Thread):
         GLib.idle_add(lambda: self._notify(**kwargs))
 
     def _notify(self, **kwargs):
-        if 'pose' in kwargs:
-            self._model.pose = kwargs['pose'] * U
-        if 'bearing' in kwargs:
+        if 'pose' in kwargs and 'bearing' in kwargs:
+            self._model.pose = kwargs['pose']
             self._model.bearing = kwargs['bearing']
+        if 'state' in kwargs and 'covariances' in kwargs:
+            state = kwargs['state']
+            covs = kwargs['covariances']
+            self._model.state = StateAdapter(state[0:3], covs[0:3, 0:3])
         self._controller.redraw()
 
 
 if __name__ == "__main__":
-    t = InspectorGui(100 + 100j, radians(10))
+    pos_fac = 0.01
+    init_pos = 1 + 1j
+    init_rot = radians(10)
+    t = InspectorGui(init_pos, init_rot)
     t.start()
 
     for x in range(1, 1000):
-        t.notify(pose=complex(100 + x, 100 + x), bearing=radians(10 + x))
-        time.sleep(1/30)
+        p = init_pos + complex(x, x) * pos_fac
+        r = init_rot + radians(x)
+
+        s = (gauss(p.real, pos_fac), gauss(p.imag, pos_fac), gauss(r, radians(1)))
+        t.notify(
+            pose=p,
+            bearing=r,
+            state=s,
+            covariances=eye(3)
+        )
+        time.sleep(1 / 30)
 
     t.join()
