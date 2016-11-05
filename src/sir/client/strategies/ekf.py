@@ -1,5 +1,6 @@
 from numpy import array, matrix, zeros, diag, eye, cos, sin, sqrt, hstack, vstack, append, arctan2
 from numpy.linalg import inv
+# from gciatto.utils import normalize_radians
 
 
 from sir.const import ODOMETRY_DX_STDEV as epsilon_x, \
@@ -62,7 +63,9 @@ def rotation_matrix(angle, three_d=False):
 
 
 def move(state, control):
-    return state[0:3] + control
+    temp = state[0:3] + control
+    # temp[2] = normalize_radians(temp[2])
+    return temp
 
 
 def jacobian_of_move_wrt_state(state, control):
@@ -103,8 +106,14 @@ def prediction(state, covariances, control, epsilon=Epsilon):
 
     jacobian_state = jacobian_of_move_wrt_state(state, control)
     jacobian_control = jacobian_of_move_wrt_control(state, control)
-    covariances[0:3, 0:3] = jacobian_state.dot(covariances[0:3, 0:3]).dot(jacobian_state.transpose()) + \
+    state_covs = jacobian_state.dot(covariances[0:3, 0:3]).dot(jacobian_state.transpose()) + \
                             jacobian_control.dot(epsilon).dot(jacobian_control.transpose())
+
+    landmarks_covs = jacobian_state.dot(covariances[0:3, 3:])
+
+    covariances[0:3, 0:3] = state_covs
+    covariances[0:3, 3:] = landmarks_covs
+    covariances[3:, 0:3] = landmarks_covs.transpose()
 
     return rearray(state), covariances
 
@@ -176,16 +185,10 @@ def add_new_landmark(state, covariances, landmark, landmark_covariances):
         state_size,
         landmark_size
     ])
-    try:
-        covariances = hstack([
-            covariances,
-            new_columns
-        ])
-    except ValueError as e:
-        print(covariances)
-        print(new_columns)
-    finally:
-        print("%s | %s" % (covariances.shape, new_columns.shape))
+    covariances = hstack([
+        covariances,
+        new_columns
+    ])
     new_rows = hstack([
         zeros([
             landmark_size,
@@ -198,7 +201,11 @@ def add_new_landmark(state, covariances, landmark, landmark_covariances):
         new_rows
     ])
 
-    return (state_size - 3) // 2, state, covariances
+    index = (state_size - 3) // 2
+
+    print("New landmark: index: %s, position: %s\ncovariances: %s" % (index, landmark, landmark_covariances))
+
+    return index, state, covariances
 
 
 # TODO cambiare strategia: scansionare ogni landmark per vedere se il candidato si trova all'interno di un ellissoide d'errore
@@ -235,6 +242,7 @@ def observe(state, landmark):
     return array([
         sqrt(q2),
         arctan2(dy, dx) - theta
+        # normalize_radians(arctan2(dy, dx) - theta)
     ])
 
 
@@ -253,7 +261,7 @@ def jacobian_observation_wrt_state(state, landmark):
 
 def jacobian_observation_wrt_landmark(state, landmark, jacobian_wrt_state=None):
     if jacobian_wrt_state is None:
-        x, y, theta = state[0:3]
+        x, y = state[0:2]
         x_lmk, y_lmk = landmark
         dx = x_lmk - x
         dy = y_lmk - y
@@ -298,6 +306,7 @@ def correction(state, covariances, sensor_observation, landmark_index, landmark,
     kalman_gain = long_covariances.dot(mini_jacobian_transpose.dot(inv_offset_covariances))
 
     new_state = state + kalman_gain.dot(offset)
+    # new_state[0, 2] = normalize_radians(new_state[0, 2])
     new_covariances = covariances - kalman_gain.dot(offset_covariances.dot(kalman_gain.transpose()))
 
     return rearray(new_state), new_covariances
