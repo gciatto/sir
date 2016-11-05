@@ -23,7 +23,7 @@ laser.translate(0, 0, 0.715)
 robot.append(laser)
 
 odometry = Odometry()
-odometry.properties(frequency=1)
+odometry.properties(frequency=ODOMETRY_FREQUENCY)
 odometry.level('differential')
 # odometry.alter('', 'sir.modifiers.OdometryZeroMeanGaussianNoiseModifier')
 odometry.translate(0, 0, 0.5)

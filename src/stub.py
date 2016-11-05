@@ -13,7 +13,7 @@ from gciatto.utils import normalize_radians
 from sir.client.controller import SirRobotController as Controller
 from sir.client.strategies.behaviors import *
 from sir.client.inspector.gui import InspectorGui
-from sir.const import ROBOT_INITIAL_POSITION, ROBOT_INITIAL_ROTATION
+from sir.const import ROBOT_INITIAL_POSITION, ROBOT_INITIAL_ROTATION, CONTROLLER_FREQUENCY
 from numpy import array, matrix
 from math import radians
 import sys
@@ -30,7 +30,7 @@ except ImportError:
     logger.fatal("you need first to install pymorse, the Python bindings for MORSE!")
     sys.exit(1)
 
-frequency = 5  # Hz
+frequency = CONTROLLER_FREQUENCY  # Hz
 step_duration = 1 / frequency  # seconds
 
 
@@ -86,15 +86,15 @@ try:
                 inspector=inspector.notify if inspector is not None else None
             )
 
-            controller.add_behavior(go_on(0.5)) \
+            controller.add_behavior(go_on()) \
                 .add_behavior(obstacle_avoidance()) \
-                .add_behavior(extended_kalman_filter())
+            #     .add_behavior(extended_kalman_filter())
             # controller.add_behavior(extended_kalman_filter())
 
             tend = 0
             no_move = dict(x=0, y=0, w=0)
             act = dict(motion=no_move)
-            # odometry.subscribe(lambda o: controller.inject_sensors_data(odometry=o))
+            odometry.subscribe(lambda o: controller.inject_sensors_data(odometry=o))
 
             while True:
                 t0 = simulation.time()

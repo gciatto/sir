@@ -111,7 +111,7 @@ Variation = namedtuple('Variation', ['dx', 'dy', 'dtheta'])
 
 def _cartesian_to_poi(p):
     polar = cartesian_to_polar(*p)
-    normalized = normalize_polar_radians(polar)
+    normalized = polar  # normalize_polar_radians(polar)
     return PointOfInterest(*chain(normalized, p))
 
 
@@ -131,14 +131,19 @@ class SirRobotController(AbstractRobotController):
                 )
             )
         )
-        self.logger.debug("Points of interest: %s", self.get_points_of_interest())
+        # self.logger.debug("Points of interest: %s", self.get_points_of_interest())
 
         self._extract_obstacles()
-        self.logger.debug("Obstacles: %s", self.get_obstacles())
+        # self.logger.debug("Obstacles: %s", self.get_obstacles())
 
-        believes['odometry'] = sensors['odometry'] if 'odometry' in sensors else None
+        if len(self.get_obstacles()) > 0:
+            closest = min(self.get_obstacles(), key=lambda x: x[0])
+            self.logger.debug("Closest Obstacle: (%s, %s, %s)" % polar_to_polar(*closest[0:3], f_angle=degrees))
 
-        self.logger.debug("Odometry: %s", self.get_odometry())
+        if 'odometry' in sensors:
+            odometry = sensors['odometry']
+            believes['odometry'] = odometry
+            self.logger.debug("Odometry: (dx, dy, dtheta) = (%s, %s, %s)" % (odometry['dx'], odometry['dy'], odometry['dyaw']))
 
     def get_odometry(self):
         data = self._believes['odometry']

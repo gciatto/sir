@@ -69,8 +69,7 @@ class LaserZeroMeanGaussianNoiseModifier(AbstractModifier):
             points_cart = self.data['point_list']  # filter(is_not_zero, self.data['point_list'])
             points_polar = (cartesian_to_polar(*v) for v in points_cart)
             noisy_polars = (
-                elementwise_sum(*vs) if vs[0][0] > 0
-                else vs[0]
+                elementwise_sum(*vs) if vs[0][0] > 0 else vs[0]
                 for vs in zip(points_polar, _noise())
             )
             normalized = list(map(normalize_polar_radians, noisy_polars))

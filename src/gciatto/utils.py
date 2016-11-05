@@ -26,9 +26,9 @@ def polar_to_cartesian(rho, theta, phi, deg=False):
             theta = radians(theta)
             phi = radians(phi)
 
-        x = rho * cos(phi) * cos(theta)
-        y = rho * cos(phi) * sin(theta)
-        z = rho * sin(phi)
+        x = rho * sin(phi) * cos(theta)
+        y = rho * sin(phi) * sin(theta)
+        z = rho * cos(phi)
 
         return x, y, z
 
