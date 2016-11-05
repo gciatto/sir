@@ -16,13 +16,16 @@ def draw_axes(canvas, cc, axis_units=10):
     cc.stroke()
 
 
-Or = 15
+Or = 25
 
 
 def fill_arc(canvas, cc, half_angle, radius_units=1):
     ar = radius_units * Or
-    cc.arc(0, 0, ar, -half_angle, half_angle)
+    cc.save()
+    cc.move_to(0, 0)
+    cc.arc(0, 0, 2 * ar, -half_angle, half_angle)
     cc.fill()
+    cc.restore()
 
 
 def fill_ellipse(canvas, cc, h_radius, v_radius, angle=0, radius_units=1):

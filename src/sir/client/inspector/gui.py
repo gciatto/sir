@@ -14,8 +14,9 @@ from threading import Thread
 from gciatto.gi.drawing import *
 from math import radians, atan2
 from gciatto.stat.normal import error_ellipse
-from numpy import zeros, eye
+from numpy import zeros, eye, matrix
 from random import gauss
+from gciatto.utils import arc_cos_sin
 import time
 
 ErrorEllipse = namedtuple('ErrorEllipse', ['h_axis', 'v_axis', 'rotation'])
@@ -25,7 +26,7 @@ class LandmarkAdapter:
     def __init__(self, position=zeros(2), covariances=zeros((2, 2))):
         self.pose = complex(*position)
         sizes, axes = error_ellipse(covariances)
-        angle = atan2(axes[0, 1], axes[0, 0])
+        angle = arc_cos_sin(axes[0, 0], axes[1, 0])
         self.error_ellipse = ErrorEllipse(sizes[0], sizes[1], angle)
 
 
@@ -259,7 +260,11 @@ if __name__ == "__main__":
             pose=p,
             bearing=r,
             state=s,
-            covariances=eye(3)
+            covariances=matrix([
+                [0.5, 1, 0],
+                [1, 0.25, 0],
+                [0, 0, radians(20)]
+            ])
         )
         time.sleep(1 / 30)
 

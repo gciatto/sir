@@ -1,8 +1,8 @@
-from numpy.linalg import eig
+from numpy.linalg import svd
 from numpy import sqrt
 
 
 def error_ellipse(covariances):
-    eigenvalues, eigenvectors = eig(covariances)
+    l_eigenvectors, eigenvalues, r_eigenvectors= svd(covariances)
     sizes = sqrt(eigenvalues)
-    return sizes, eigenvectors
+    return sizes, l_eigenvectors

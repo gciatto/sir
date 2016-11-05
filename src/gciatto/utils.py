@@ -58,3 +58,11 @@ def elementwise_sum(v1, v2):
 
 def is_not_zero(v):
     return not all((x == 0 for x in v))
+
+
+def arc_cos_sin(cosine, sine):
+    angle = acos(cosine)
+    if sine >= 0:
+        return angle
+    else:
+        return -angle

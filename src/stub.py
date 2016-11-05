@@ -88,7 +88,7 @@ try:
 
             controller.add_behavior(go_on()) \
                 .add_behavior(obstacle_avoidance()) \
-            #     .add_behavior(extended_kalman_filter())
+                .add_behavior(extended_kalman_filter())
             # controller.add_behavior(extended_kalman_filter())
 
             tend = 0
