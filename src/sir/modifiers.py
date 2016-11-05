@@ -5,7 +5,7 @@ from morse.modifiers.abstract_modifier import AbstractModifier
 
 from gciatto.utils import *
 from sir.const import LASER_RANGE_STDEV, LASER_HORIZONTAL_ANGLE_STDEV, LASER_VERTICAL_ANGLE_STDEV, ODOMETRY_DX_STDEV, \
-    ODOMETRY_DY_STDEV, ODOMETRY_DZ_STDEV, ODOMETRY_DYAW_STDEV, ODOMETRY_DROLL_STDEV, ODOMETRY_DPITCH_STDEV
+    ODOMETRY_DY_STDEV, ODOMETRY_DZ_STDEV, ODOMETRY_DYAW_STDEV, ODOMETRY_DROLL_STDEV, ODOMETRY_DPITCH_STDEV, ROBOT_INITIAL_ROTATION
 
 _L = logging.getLogger("morse." + __name__)
 
@@ -13,6 +13,7 @@ _L = logging.getLogger("morse." + __name__)
 class OdometryZeroMeanGaussianNoiseModifier(AbstractModifier):
 
     def initialize(self):
+        self._initial_yaw = float(self.parameter("initial_yaw", default=ROBOT_INITIAL_ROTATION[2]))
         self._dx_stdev = float(self.parameter("dx_stdev", default=ODOMETRY_DX_STDEV))
         self._dy_stdev = float(self.parameter("dy_stdev", default=ODOMETRY_DY_STDEV))
         self._dz_stdev = float(self.parameter("dz_stdev", default=ODOMETRY_DZ_STDEV))
@@ -33,7 +34,9 @@ class OdometryZeroMeanGaussianNoiseModifier(AbstractModifier):
                 gauss(0, self._droll_stdev), \
                 gauss(0, self._dpitch_stdev)
 
+            self.data['dx'] *= cos(self._initial_yaw)
             self.data['dx'] += dx
+            self.data['dy'] *= sin(self._initial_yaw)
             self.data['dy'] += dy
             self.data['dz'] += dz
             self.data['dyaw'] += dyaw

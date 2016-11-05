@@ -146,11 +146,11 @@ class SirRobotController(AbstractRobotController):
             self.logger.debug("Odometry: (dx, dy, dtheta) = (%s, %s, %s)" % (odometry['dx'], odometry['dy'], odometry['dyaw']))
 
     def get_odometry(self):
-        data = self._believes['odometry']
-        if data is None:
-            return Variation(0, 0, 0)
-        else:
+        if 'odometry' in self._believes:
+            data = self._believes['odometry']
             return Variation(data['dx'], data['dy'], data['dyaw'])
+        else:
+            return Variation(0, 0, 0)
 
     def _extract_obstacles(self):
         self._obstacles_extractor.extract_obstacles()

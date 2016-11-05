@@ -1,11 +1,13 @@
 from numpy import array, matrix, zeros, diag, eye, cos, sin, sqrt, hstack, vstack, append, arctan2
 from numpy.linalg import inv
 
+
 from sir.const import ODOMETRY_DX_STDEV as epsilon_x, \
     ODOMETRY_DY_STDEV as epsilon_y, \
-    ODOMETRY_DYAW_STDEV as epsilon_theta
-from sir.const import LASER_RANGE_STDEV as delta_rho, \
-    LASER_HORIZONTAL_ANGLE_STDEV as delta_theta
+    ODOMETRY_DYAW_STDEV as epsilon_theta, \
+    LASER_RANGE_STDEV as delta_rho, \
+    LASER_HORIZONTAL_ANGLE_STDEV as delta_theta, \
+    EKF_LMK_EUCLIDEAN_THRESHOLD as THRESHOLD
 
 
 Epsilon = diag((epsilon_x ** 2, epsilon_y ** 2, epsilon_theta ** 2))
@@ -60,26 +62,40 @@ def rotation_matrix(angle, three_d=False):
 
 
 def move(state, control):
-    theta = state[2]
-    rotation = rotation_matrix(theta, True)
-    return state[0:3] + rotation.dot(control)
+    return state[0:3] + control
 
 
 def jacobian_of_move_wrt_state(state, control):
     result = eye(3)
-    theta = state[2]
-    ux, uy = control[0:2]
-    c, s = cos(theta), sin(theta)
-
-    result[0, 2] = -ux * s - uy * c
-    result[1, 2] = ux * c - uy * s
-
     return result
 
 
 def jacobian_of_move_wrt_control(state, control):
-    theta = state[2]
-    return rotation_matrix(theta, True)
+    result = eye(3)
+    return result
+
+
+# def move(state, control):
+#     theta = state[2]
+#     rotation = rotation_matrix(theta, True)
+#     return state[0:3] + rotation.dot(control)
+#
+#
+# def jacobian_of_move_wrt_state(state, control):
+#     result = eye(3)
+#     theta = state[2]
+#     ux, uy = control[0:2]
+#     c, s = cos(theta), sin(theta)
+#
+#     result[0, 2] = -ux * s - uy * c
+#     result[1, 2] = ux * c - uy * s
+#
+#     return result
+#
+#
+# def jacobian_of_move_wrt_control(state, control):
+#     theta = state[2]
+#     return rotation_matrix(theta, True)
 
 
 def prediction(state, covariances, control, epsilon=Epsilon):
@@ -186,7 +202,7 @@ def add_new_landmark(state, covariances, landmark, landmark_covariances):
 
 
 # TODO cambiare strategia: scansionare ogni landmark per vedere se il candidato si trova all'interno di un ellissoide d'errore
-def classification(state, covariances, observation, delta=Delta, threshold=1):
+def classification(state, covariances, observation, delta=Delta, threshold=THRESHOLD):
     landmark_candidate = inv_observe(state, observation)
 
     jacobian_state = jacobian_of_inv_observe_wrt_state(state, observation)
@@ -300,7 +316,7 @@ def extended_kalman_filter_2d(controller, believes: dict, actuators: dict, dt: f
         covariances = zeros((3, 3))
         believes['expected_state_covariances'] = covariances
 
-    bel_odometry = believes['odometry']
+    bel_odometry = believes['odometry'] if 'odometry' in believes else dict()
     prev_update = believes['last_control_timestamp'] if 'last_control_timestamp' in believes else 0
     curr_update = bel_odometry['timestamp'] if bel_odometry is not None and 'timestamp' in bel_odometry else 0
 

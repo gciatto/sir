@@ -86,10 +86,10 @@ try:
                 inspector=inspector.notify if inspector is not None else None
             )
 
-            controller.add_behavior(go_on()) \
-                .add_behavior(obstacle_avoidance()) \
-                .add_behavior(extended_kalman_filter())
-            # controller.add_behavior(extended_kalman_filter())
+            # controller.add_behavior(go_on()) \
+            #     .add_behavior(obstacle_avoidance()) \
+            #     .add_behavior(extended_kalman_filter())
+            controller.add_behavior(extended_kalman_filter())
 
             tend = 0
             no_move = dict(x=0, y=0, w=0)
@@ -102,7 +102,7 @@ try:
                 sensor_data['laser'] = laser.get_local_data().result()
                 t1 = simulation.time()
                 # sensor_data['odometry'] = odometry.get_local_data().result()
-                sensor_data['odometry'] = simulate_odometry(t1, tend, **act['motion'])
+                # sensor_data['odometry'] = simulate_odometry(t1, tend, **act['motion'])
                 t2 = simulation.time()
                 sensor_data['pose'] = pose.get_local_data().result()
                 t3 = simulation.time()
