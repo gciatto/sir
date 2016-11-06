@@ -46,7 +46,7 @@ robot.rotate(*ROBOT_INITIAL_ROTATION)
 
 robot.add_default_interface('socket')
 
-env = Environment('./res/arenas/boxes.blend', fastmode=True)
+env = Environment('./res/arenas/boxes_nowalls_atall.blend', fastmode=True)
 env.set_time_strategy(TimeStrategies.FixedSimulationStep)
 env.show_framerate(True)
 # env.simulator_frequency(1/10)

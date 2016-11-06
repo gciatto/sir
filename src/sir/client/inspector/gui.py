@@ -18,6 +18,7 @@ from numpy import zeros, eye, matrix
 from random import gauss
 from gciatto.utils import arc_cos_sin
 from sir.client.strategies.ekf import landmarks
+# from sys import exit
 
 
 ErrorEllipse = namedtuple('ErrorEllipse', ['h_axis', 'v_axis', 'rotation'])
@@ -55,7 +56,7 @@ class InspectorController:
         self._canvas = canvas
         self._size = complex(0, 0)
         self._center = complex(0, 0)
-        self._scroll = 0
+        self._scroll = -6
         self._rotation = 0
         self._canvas_mouse_listener = HighLevelMouseObservable(
             drag=self.on_canvas_drag_notify_event,
@@ -71,6 +72,7 @@ class InspectorController:
 
     def on_main_window_delete_event(self, *args):
         Gtk.main_quit(*args)
+        # exit(0)
 
     def on_canvas_draw(self, canvas, cc: cairo.Context):
         self._draw_world(canvas, cc)

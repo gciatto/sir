@@ -1,5 +1,5 @@
 from numpy.linalg import svd
-from numpy import sqrt
+from numpy import sqrt, ones
 
 
 def error_ellipse(covariances):

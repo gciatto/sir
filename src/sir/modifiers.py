@@ -40,8 +40,11 @@ class OdometryZeroMeanGaussianNoiseModifier(AbstractModifier):
             self.data['dy'] += dy
             self.data['dz'] += dz
             self.data['dyaw'] += dyaw
+            self.data['dyaw'] = normalize_radians(self.data['dyaw'])
             self.data['dpitch'] += dpitch
+            self.data['dpitch'] = normalize_radians(self.data['dpitch'])
             self.data['droll'] += droll
+            self.data['droll'] = normalize_radians(self.data['droll'])
 
             _L.info("%s Noise: (dx, dy, dtheta) += (%.1e, %.1e, %.1e) --> (%.1e, %.1e, %.1e) " % (self.component_name, dx, dy, dyaw, self.data['dx'], self.data['dy'], self.data['dyaw']))
         except KeyError as detail:

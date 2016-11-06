@@ -1,7 +1,8 @@
 from numpy import array, matrix, zeros, diag, eye, cos, sin, sqrt, hstack, vstack, append, arctan2
 from numpy.linalg import inv
-# from gciatto.utils import normalize_radians
-
+from gciatto.utils import normalize_radians
+from math import pi
+INFINITE = 1000 ** 2
 
 from sir.const import ODOMETRY_DX_STDEV as epsilon_x, \
     ODOMETRY_DY_STDEV as epsilon_y, \
@@ -64,7 +65,7 @@ def rotation_matrix(angle, three_d=False):
 
 def move(state, control):
     temp = state[0:3] + control
-    # temp[2] = normalize_radians(temp[2])
+    temp[2] = normalize_radians(temp[2])
     return temp
 
 
@@ -148,6 +149,8 @@ def landmarks(state, covariances=None, columns=False):
 def inv_observe(state, observation):
     r = observation[0]
     alpha = observation[1]
+    if alpha <= -pi or alpha > pi:
+        print(alpha)
     pose = state[0:2]
     theta = state[2]
     local_vector = array((r * cos(alpha), r * sin(alpha)))
@@ -195,6 +198,7 @@ def add_new_landmark(state, covariances, landmark, landmark_covariances):
             state_size
         ]),
         landmark_covariances
+        # eye(2) * INFINITE
     ])
     covariances = vstack([
         covariances,
@@ -227,7 +231,7 @@ def classification(state, covariances, observation, delta=Delta, threshold=THRES
         # distance = mahalonobis(position, landmark_candidate, inverse=candidate_inverse)
         distance = euclidean(position, landmark_candidate)
 
-        if distance <= threshold:
+        if distance <= threshold:  # **2:
             return index, state, covariances
 
     return add_new_landmark(state, covariances, landmark_candidate, candidate_covariances)
@@ -241,8 +245,8 @@ def observe(state, landmark):
     q2 = dx * dx + dy * dy
     return array([
         sqrt(q2),
-        arctan2(dy, dx) - theta
-        # normalize_radians(arctan2(dy, dx) - theta)
+        # arctan2(dy, dx) - theta
+        normalize_radians(arctan2(dy, dx) - theta)
     ])
 
 
@@ -278,7 +282,8 @@ def jacobian_observation_wrt_landmark(state, landmark, jacobian_wrt_state=None):
 def correction(state, covariances, sensor_observation, landmark_index, landmark, landmark_covariances, landmark_columns,
                delta=Delta):
     offset = sensor_observation - observe(state, landmark)
-
+    offset[1] = normalize_radians(offset[1])
+    print("Offset: %s" % offset)
     jacobian_state = jacobian_observation_wrt_state(state, landmark)
     jacobian_landmark = jacobian_observation_wrt_landmark(state, landmark, jacobian_state)
     mini_jacobian = hstack([
@@ -306,7 +311,7 @@ def correction(state, covariances, sensor_observation, landmark_index, landmark,
     kalman_gain = long_covariances.dot(mini_jacobian_transpose.dot(inv_offset_covariances))
 
     new_state = state + kalman_gain.dot(offset)
-    # new_state[0, 2] = normalize_radians(new_state[0, 2])
+    new_state[0, 2] = normalize_radians(new_state[0, 2])
     new_covariances = covariances - kalman_gain.dot(offset_covariances.dot(kalman_gain.transpose()))
 
     return rearray(new_state), new_covariances
