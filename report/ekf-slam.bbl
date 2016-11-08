@@ -1,0 +1,16 @@
+\begin{thebibliography}{TBF05}
+
+\bibitem[Bre14]{brenner204}
+Claus Brenner.
+\newblock Slam lectures.
+\newblock
+  \url{https://www.youtube.com/playlist?list=PLpUPoM7Rgzi_7YWn14Va2FODh7LzADBSm},
+  2014.
+
+\bibitem[TBF05]{thrun2005}
+Sebastian Thrun, Wolfram Burgard, and Dieter Fox.
+\newblock {\em Probabilistic Robotics (Intelligent Robotics and Autonomous
+  Agents)}.
+\newblock The MIT Press, 2005.
+
+\end{thebibliography}

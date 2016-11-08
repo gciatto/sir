@@ -1,0 +1,29 @@
+In the context of robotics, \Slam{} (\SLAM) is the problem of a robot dynamically constructing a map of an unknown environment and concurrently localizing itself within it, while exploring such environment. 
+It may seem a chicken-or-egg problem, since a map is needed for localization and a frame of reference is needed for building a map, but the problem has been studied and solved both from a theoretical (probabilistic) and practical point of view in \cite{thrun2005}.
+
+\SLAM{} involves a robotic agent being at least able to move within, and gather information about, the environment. Wheels and laser scanners are common choices to satisfy such requirements. 
+Generally speaking, we will refer to them as \emph{actuators} and \emph{exteroceptive sensors}, respectively. 
+Optionally, the robot may be equipped with one or more \emph{odometric} sensors allowing it to actually measure its own movement, which should otherwise be inferred, \eg{} by the speed imposed to the wheels. 
+Generally speaking we call them \emph{proprioceptive sensors}. 
+
+It is well understood in robotics that sensory data and inferred movement information are inherently noisy. 
+From a probabilistic point of view this means that, if the robot is keeping track of its own position, the \emph{uncertainty} of about such position increases as the robot moves. 
+Conversely, supposing the robot is able to detect some objects (\emph{landmarks}, in jargon) within its surroundings, recognize them for a number of observations, and estimate the relative position between itself and each landmark, then it can use such information to reduce the uncertainty about its own position.
+Such a correlation between position estimation and landmark measurement is clearly explained in \cite[Unit C]{brenner204}.
+
+The generic approach to \SLAM{} requires the following models to be properly defined: 
+\begin{description}
+	\item[Motion model:] describes how the robot updates the estimation of its own position and orientation according to the proprioceptive sensor data. 
+	It depends on the degrees of freedom of the robot and the nature of the available data. 
+	For instance, in this report, we consider the case of a differential robot constrained to move on a plane. 
+	So the robot pose variables are $x$, $y$ and $\theta$ (the \emph{bearing}, in jargon) and the proprioceptive data consist of the last velocity values $v_l$ and $v_r$ imposed to the wheels motors.
+
+	\item[Inverse Observation model:] describes how exteroceptive sensor data is used to deduce the landmarks positions, taking into account the current estimation of the robot position and orientation too.
+	It depends on the nature of the data and the number of dimensions required to localize a landmark on the map.
+	For example, in this report, we consider the case of a laser sensor providing, for each landmark, both its distance and angle w.r.t. the laser sensor.
+	So the exteroceptive data consist of $(\rho,\, \alpha)$ pairs, which are used to deduce the landmark position $(x_m,\, y_m)$ on the map.
+	
+	\item[Direct Observation model:] describes how to predict the expected exteroceptive sensor data for a known landmark.
+	From a conceptual point of view, it's the inverse function of the Inverse Observation model. 
+	E.g., for our concerns, the Direct Observation Model takes into account the current estimation of the robot position and orientation $(x,\, y,\, \theta)$ and some known landmark position $(x_m,\, y_m)$ and computes the expected sensor data $(\rho,\, \alpha)$.
+\end{description}
