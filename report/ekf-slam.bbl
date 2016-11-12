@@ -7,6 +7,27 @@ Claus Brenner.
   \url{https://www.youtube.com/playlist?list=PLpUPoM7Rgzi_7YWn14Va2FODh7LzADBSm},
   2014.
 
+\bibitem[Fri13]{frischenschlager2013}
+Albin Frischenschlager.
+\newblock Slam algorithm.
+\newblock
+  \url{http://ti.tuwien.ac.at/cps/teaching/courses/networked-embedded-systems/seminar.pdf},
+  2013.
+
+\bibitem[RB]{slamForDummies}
+Søren Riisgaard and Morten~Rufus Blas.
+\newblock Slam for dummies.
+\newblock
+  \url{https://ocw.mit.edu/courses/aeronautics-and-astronautics/16-412j-cognitive-robotics-spring-2005/projects/1aslam_blas_repo.pdf}.
+
+\bibitem[Sol14]{sola204}
+Joan Solà.
+\newblock Simultaneous localization and mapping with the extended kalman
+  filter.
+\newblock
+  \url{http://www.iri.upc.edu/people/jsola/JoanSola/objectes/curs_SLAM/SLAM2D/SLAM%20course.pdf},
+  2014.
+
 \bibitem[TBF05]{thrun2005}
 Sebastian Thrun, Wolfram Burgard, and Dieter Fox.
 \newblock {\em Probabilistic Robotics (Intelligent Robotics and Autonomous

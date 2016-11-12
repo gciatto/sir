@@ -27,3 +27,18 @@ The generic approach to \SLAM{} requires the following models to be properly def
 	From a conceptual point of view, it's the inverse function of the Inverse Observation model. 
 	E.g., for our concerns, the Direct Observation Model takes into account the current estimation of the robot position and orientation $(x,\, y,\, \theta)$ and some known landmark position $(x_m,\, y_m)$ and computes the expected sensor data $(\rho,\, \alpha)$.
 \end{description}
+Such models are exploited by the following conceptual flow in order to produce a new estimation of the current position and orientation. It takes into account the previous estimation, and the last available proprioceptive and exteroceptive data:
+\begin{enumerate}
+	\item \emph{Prediction} phase: a basic estimation of the new position is achieved by combining the previous estimation with the proprioceptive data according to the motion model;
+	\item \emph{Recognition} phase: the information from the exteroceptive data is analyzed in order to understand if it corresponds to an already known landmark or a new one. This normally exploits the inverse observation model: if it's a new landmark it must be added to the map;
+	\item \emph{Observation} phase: when an already-known landmark is found, the current exteroceptive data relative to such a landmark (the \emph{measurement}) is compared to the estimation achieved through the direct observation model for the same landmark (the \emph{expected} measurement);
+	\item \emph{Correction} phase: the difference between the measurement and the expected measurement is used to improve the basic estimation from the prediction phase and the landmark position estimation.
+\end{enumerate}
+
+Our contribution consists of a practical tutorial for solving the \SLAM{} problem through the \emph{\Ekf} (\EKF), which supposes the robot state and the landmarks positions to be random vectors having a multivariate normal distribution, whose principal moments are estimated according to the phases described above.
+
+\nocite{brenner204}
+\nocite{frischenschlager2013}
+\nocite{slamForDummies}
+\nocite{sola204}
+\nocite{thrun2005}

@@ -4,16 +4,25 @@
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
 \usepackage{url}
-\usepackage{hyperref}
+\usepackage{hyperref}\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+
+\usepackage{bm}
 
 
 \newcommand{\eg}{e.g.,}
 \newcommand{\ie}{i.e.,}
 \newcommand{\SLAM}{SLAM}
 \newcommand{\Slam}{Simultaneous Localization And Mapping}
+\newcommand{\EKF}{EKF}
+\newcommand{\Ekf}{Extended Kalman Filter}
+
+%\newcommand{\vect}[1]{\symbf{#1}}
+\newcommand{\vect}[1]{\boldsymbol{\mathrm{{#1}}}}
 
 %opening
-\title{\textbf{Simultaneous Localization And Mapping via Extended Kalman Filter}}
+\title{\textbf{\Slam{} via \Ekf{}}}
 \author{
 	Giovanni \textsc{Ciatto} \\ \texttt{giovanni.ciatto@studio.unibo.it} \\
 }
@@ -24,7 +33,15 @@
 	
 	\section{Introduction}
 		\input{introduction.tex}
+		
+	\section{Models and Reference Frames}
+		\input{models.tex}
+		
+	\newpage
+	\section*{Appendix}
+		\input{appendix.tex}
 	
+	\newpage
 	\bibliography{bibliography.bib}{}
 	\bibliographystyle{alpha}
 			
