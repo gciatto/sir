@@ -7,7 +7,7 @@ Optionally, the robot may be equipped with one or more \emph{odometric} sensors 
 Generally speaking we call them \emph{proprioceptive sensors}. 
 
 It is well understood in robotics that sensory data and inferred movement information are inherently noisy. 
-From a probabilistic point of view this means that, if the robot is keeping track of its own position, the \emph{uncertainty} of about such position increases as the robot moves. 
+From a probabilistic point of view this means that, if the robot is keeping track of its own position, the \emph{uncertainty} of such position increases as the robot moves. 
 Conversely, supposing the robot is able to detect some objects (\emph{landmarks}, in jargon) within its surroundings, recognize them for a number of observations, and estimate the relative position between itself and each landmark, then it can use such information to reduce the uncertainty about its own position.
 Such a correlation between position estimation and landmark measurement is clearly explained in \cite[Unit C]{brenner204}.
 
@@ -29,9 +29,9 @@ The generic approach to \SLAM{} requires the following models to be properly def
 \end{description}
 Such models are exploited by the following conceptual flow in order to produce a new estimation of the current position and orientation. It takes into account the previous estimation, and the last available proprioceptive and exteroceptive data:
 \begin{enumerate}
-	\item \emph{Prediction} phase: a basic estimation of the new position is achieved by combining the previous estimation with the proprioceptive data according to the motion model;
-	\item \emph{Recognition} phase: the information from the exteroceptive data is analyzed in order to understand if it corresponds to an already known landmark or a new one. This normally exploits the inverse observation model: if it's a new landmark it must be added to the map;
-	\item \emph{Observation} phase: when an already-known landmark is found, the current exteroceptive data relative to such a landmark (the \emph{measurement}) is compared to the estimation achieved through the direct observation model for the same landmark (the \emph{expected} measurement);
+	\item \emph{Prediction} phase: a basic estimation of the new position and orientation is achieved by combining the previous estimation with the proprioceptive data according to the motion model.
+	\item \emph{Recognition} phase: the information from the exteroceptive data is analyzed in order to understand if it corresponds to an already known landmark or a new one. This normally exploits the inverse observation model: if it's a new landmark it must be added to the map.
+	\item \emph{Observation} phase: when an already-known landmark is found, the current exteroceptive data relative to such a landmark (the \emph{measurement}) is compared to the estimation achieved through the direct observation model for the same landmark (the \emph{expected} measurement).
 	\item \emph{Correction} phase: the difference between the measurement and the expected measurement is used to improve the basic estimation from the prediction phase and the landmark position estimation.
 \end{enumerate}
 
