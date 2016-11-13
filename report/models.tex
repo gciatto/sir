@@ -24,8 +24,8 @@ It is important to understand that several Frames of Reference (\FoR{}) are invo
 	For what concerns this report, we consider a frame having its origin into the robot geometry center, the abscissas axis always coinciding with the heading direction, and the ordinate axis coinciding with the lateral direction (increasing on the left, as shown in Figure \ref{fig.fors.robot}).
 	
 	\item The \emph{sensor} (or \emph{measurement}) \FoR{}, which depends on the exteroceptive sensor position within the robot frame, and is in general different from the robot frame. 
-	E.g., the sensor may be in position $(d_x,\, d_y)^\top$ w.r.t. the robot frame, as shown in Figure \ref{fig.fors.robot}, and this translation should be taken into account when handling sensor data in order to understand obstacles position on the map.
-	In this tutorial we consider, for simplicity, the sensor frame to be coincident with the robot frame \ie{} $d_x = d_y = 0$.
+	E.g., the sensor may be in position $(d_h,\, d_l)^\top$ w.r.t. the robot frame, as shown in Figure \ref{fig.fors.robot}, and this translation should be taken into account when handling sensor data in order to understand obstacles position on the map.
+	In this tutorial we consider, for simplicity, the sensor frame to be coincident with the robot frame \ie{} $d_h = d_h = 0$.
 	
 \end{itemize}
 
@@ -33,7 +33,8 @@ Please note that, since part of the SLAM process is to build a map of the enviro
 In what follows, we (and the robot) assume that the global frame coincides with the initial robot frame, \ie{} the map frame is defined by the initial pose of the robot into the environment: the origin is its \emph{very first} position, the abscissas axis is its \emph{initial} heading direction and, consequently, the ordinate axis is its \emph{initial} lateral direction.
 
 \subsection{The motion model}
-	The motion model is a function $g : \mathbb{R}^n \times \mathbb{R}^m \rightarrow \mathbb{R}^n$ mapping the previous robot pose vector, $\vect{r}_{t-1} \in \mathbb{R}^n$, \ie{} the vector containing the robot position and orientation (which are relative to the \emph{map} frame), into the current one, $\vect{r}_t \in \mathbb{R}^n$, by taking into account the last \emph{control} vector $\vect{u}_t \in \mathbb{R}^m$, \ie{} the vector containing proprioceptive data (which is relative to the \emph{robot} frame). More formally:
+	The motion model is a function $g : \mathbb{R}^n \times \mathbb{R}^m \rightarrow \mathbb{R}^n$ mapping the previous robot pose vector, $\vect{r}_{t-1} \in \mathbb{R}^n$, \ie{} the vector containing the robot position and orientation (which are relative to the \emph{map} frame), into the current one, $\vect{r}_t \in \mathbb{R}^n$, by taking into account the last \emph{control} vector $\vect{u}_t \in \mathbb{R}^m$, \ie{} the vector containing proprioceptive data (which is relative to the \emph{robot} frame). 
+	More formally:
 	\[
 		\vect{r}_t = g(\vect{r}_{t-1},\, \vect{u}_t)
 	\]
@@ -75,7 +76,7 @@ In what follows, we (and the robot) assume that the global frame coincides with 
 		
 		Please consider reading Appendix \ref{app.affine2d} and \ref{app.differential_drive} in order to recall conversions between reference frames and differential drive.
 		
-	\paragraph{Example: The odometric sensor.}
+	\paragraph{Example: Robot equipped with odometric sensor on the plane.}
 		Suppose our robot is embodied with an odometric sensor, which periodically provides a triplet $(dh,\, dl, d\theta)^\top$, \ie{} the variations in the heading and lateral directions and the angular variation since the last update. 
 		Such variations are of course relative to the robot frame.
 		We assume such a sensor frequency to be high.
@@ -103,3 +104,67 @@ In what follows, we (and the robot) assume that the global frame coincides with 
 			\end{array}\right)
 		\end{equation}
 		This means the variations relative to the robot frame are simply converted into the map frame.
+
+\subsection{The inverse observation model}
+	The inverse observation model is a function $\eta : \mathbb{R}^p \times \mathbb{R}^n \rightarrow \mathbb{R}^q$ mapping a measurement vector, $\vect{s}_{t} \in \mathbb{R}^p$, \ie{} the vector containing the data identifying an obstacle from the exteroceptive sensor (w.r.t. the \emph{sensor} frame), into the position vector of the corresponding landmark, $\vect{m}_{t} \in \mathbb{R}^q$, which is relative to the \emph{global} frame, by taking into account the current \emph{robot} pose vector $\vect{r}_t \in \mathbb{R}^n$.
+	More formally:
+	\[
+	\vect{m}_t = \eta(\vect{r}_{t},\, \vect{s}_t)
+	\]
+	
+	\paragraph{Example: Laser scanner on top of a robot.}
+		Suppose a laser scanner is located in position $(d_h,\,d_l)^\top$ within the robot frame\footnote{coordinates are expressed w.r.t. the $h$eading and $l$ateral axes}.
+		In the real case, the sensor will probably be on the top of the robot.
+		The laser scanners usually provide distance and angle (w.r.t. the sensor frame) for each obstacle which is closer than a maximum distance $D_{max} > 0$.
+		Moreover, they are usually characterized by $W_{V},W_{H} \subseteq [\,-\pi,\, \pi\,]$: vertical and horizontal angle windows, respectively.
+		Using spheric coordinates, $\rho$, $\theta$ and $\phi$, we say that the sensor can only perceive obstacles such that $\rho \leq D_{max}$ and $\theta \in W_{H}$ and $\phi \in W_{V}$.
+		For what concerns this example, we suppose that $W_H = (\,-\pi,\, \pi\,]$ and $W_V = \{\, \pi / 2 \,\}$, \ie{} the robot can perceive obstacles in any direction on the horizontal plane.
+		In the real case, one may take into account that the sensor be in an higher position than the robot and therefore not being able to perceive shorter obstacles.
+		
+		Under such hypotheses\footnote{the subscript indicating the computational step is omitted in order to keep the notation readable}, the measurement vector is the distance-and-angle pair $\vect{s} = (\rho,\, \alpha)^\top$, the landmark position is the pair $\vect{m} = (x_m,\, y_m)^\top$, and the inverse observation model can be simply defined as follows:
+		\begin{equation}
+			\label{eq.inv_observation.laser}
+			\left(\begin{array}{c}
+				x_m \\ y_m
+			\end{array}\right)
+			=
+			\left(\begin{array}{ccc}
+				\cos{\theta} & -\sin{\theta} \\
+				\sin{\theta} & \cos{\theta}
+			\end{array}\right)
+			\cdot
+			\left(
+				\left(\begin{array}{c}
+					d_x \\ d_y
+				\end{array}\right)
+				+ \rho \cdot
+				\left(\begin{array}{cc}
+					\cos{\alpha} & -\sin{\alpha} \\
+					\sin{\alpha} & \cos{\alpha}
+				\end{array}\right)
+			\right)
+			+
+			\left(\begin{array}{c}
+				x \\ y
+			\end{array}\right)
+		\end{equation}
+		
+		Please note that, if $d_x = d_y = 0$, \ie{} sensor is located into the robot center, Equation \ref{eq.inv_observation.laser} can be reduced:
+		\[
+			\left(\begin{array}{c}
+				x_m \\ y_m
+			\end{array}\right)
+			=
+			\rho \cdot
+			\left(\begin{array}{ccc}
+				\cos{(\theta + \alpha)} & -\sin{(\theta + \alpha)} \\
+				\sin{(\theta + \alpha)} & \cos{(\theta + \alpha)}
+			\end{array}\right)
+			+
+			\left(\begin{array}{c}
+			x \\ y
+			\end{array}\right)
+		\]
+		
+		
+		

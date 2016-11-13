@@ -1,7 +1,8 @@
 \BOOKMARK [1][-]{section.1}{Introduction}{}% 1
 \BOOKMARK [1][-]{section.2}{Models and Reference Frames}{}% 2
 \BOOKMARK [2][-]{subsection.2.1}{The motion model}{section.2}% 3
-\BOOKMARK [1][-]{appendix.A}{Mathematical background}{}% 4
-\BOOKMARK [2][-]{subsection.A.1}{Affine transformations on the plane}{appendix.A}% 5
-\BOOKMARK [2][-]{subsection.A.2}{Multivariate normal distribution}{appendix.A}% 6
-\BOOKMARK [2][-]{subsection.A.3}{Differential drive.}{appendix.A}% 7
+\BOOKMARK [2][-]{subsection.2.2}{The inverse observation model}{section.2}% 4
+\BOOKMARK [1][-]{appendix.A}{Mathematical background}{}% 5
+\BOOKMARK [2][-]{subsection.A.1}{Affine transformations on the plane}{appendix.A}% 6
+\BOOKMARK [2][-]{subsection.A.2}{Multivariate normal distribution}{appendix.A}% 7
+\BOOKMARK [2][-]{subsection.A.3}{Differential drive.}{appendix.A}% 8
