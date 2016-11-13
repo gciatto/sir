@@ -1,4 +1,6 @@
 \subsection{Affine transformations on the plane}
+	\label{app.affine2d}
+
 	Here we recall the affine transformation equation, mapping each point from a source 2D plane to another translated, scaled and rotated 2D plane: 
 	\begin{equation}
 		\left(\begin{array}{c}
@@ -87,9 +89,9 @@
 		\]
 		where the $i$-th column of $V$, namely $\vect{v}_i$, is the versor identifying the direction of the $i$-th axis of the ellipsoid, and the $i$-th diagonal element of $D$, namely $d_i^2$ can be thought to be the variance of the distribution according to the $i$-th axis, \ie{} $d_i$ can be thought to be its standard deviation.
 		
-		In the $1$-dimensional case it is common to represent the $k$-standard deviation interval, \ie{} the circular interval centered on the mean and including each point whose distance from the mean is lower than $k$ times the standard deviation. Analogously, the $k$-th ellipsoid centered in $\vect{\mu}$ can be represented for the $n$-dimensional case by applying the following affine transformation to each point on the unary hyper-sphere:
+		In the $1$-dimensional case it is common to represent the $k$-standard deviation interval, \ie{} the circular interval centered on the mean and including each point whose distance from the mean is lower than $k$ times the standard deviation. Analogously, the $k$-th ellipsoid centered in $\vect{\mu}$ can be represented for the $n$-dimensional case by applying the following affine transformation $T : \mathbb{R}^n \rightarrow \mathbb{R}^n$ to each point on the unitary hyper-sphere:
 		\[
-			k \cdot 
+			T(\vect{c}) = k \cdot 
 			\left(\begin{array}{ccc}
 				\vect{v}_1 & \cdots & \vect{v}_n
 			\end{array}\right)
@@ -103,12 +105,14 @@
 			\cdot
 			\vect{c} + \vect{\mu}
 		\]
-		where $\vect{c} \in \{ (x_1,\, \ldots,\,\ x_n)^\top \ |\  x_1^2 + \ldots + x_n^2 = 1 \}$.
+		where $\vect{c} \in \{\, (x_1,\, \ldots,\,\ x_n)^\top \in \mathbb{R}^n \ |\  x_1^2 + \ldots + x_n^2 = 1 \,\}$.
 		
 	\subsection{Differential drive.}
 		\label{app.differential_drive}
 	
-		A differential robot only owns two non-rotating wheels. Its actuators can simply impose a velocity value to each wheel. We will call $v_l$ and $v_r$ the left and right speed value, while the distance between the wheels is $2L$.
+		A differential robot can only exploit two non-rotating wheels. 
+		Its actuators can simply impose a velocity value to each wheel. 
+		We will call $v_l$ and $v_r$ the left and right speed value, while the distance between the wheels is $2L$.
 		Here we recall how the linear velocity value $v$ in the heading direction and the angular velocity $\omega$, w.r.t. the \emph{instantaneous center of curvature}, can be computed as a function of $v_l$ and $v_r$:
 		\begin{equation}
 			\left(\begin{array}{c}

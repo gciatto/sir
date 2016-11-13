@@ -11,9 +11,14 @@
 \usepackage{graphicx}
 \usepackage{subcaption}
 
-%\usepackage{bm}
+\makeatletter
+\newcommand\footnoteref[1]{\protected@xdef\@thefnmark{\ref{#1}}\@footnotemark}
+\makeatother
 
+\numberwithin{equation}{section}
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
 
+% macros
 \newcommand{\eg}{e.g.,}
 \newcommand{\ie}{i.e.,}
 \newcommand{\FoR}{F.o.R.}
@@ -22,8 +27,9 @@
 \newcommand{\EKF}{EKF}
 \newcommand{\Ekf}{Extended Kalman Filter}
 
-%\newcommand{\vect}[1]{\symbf{#1}}
 \newcommand{\vect}[1]{\boldsymbol{\mathrm{{#1}}}}
+
+\newcommand{\notationAlert}{Here we write $\alpha \leftarrow f(\alpha)$ as a simplified notation for $\alpha_t = f(\alpha_{t-1})$, where $\alpha$ is any variable to be updated according to the value it had during the previous computational step and $t$ ranges over computational steps.}
 
 %opening
 \title{\textbf{\Slam{} via \Ekf{}}}
@@ -42,7 +48,8 @@
 		\input{models.tex}
 		
 	\newpage
-	\section*{Appendix}
+	\appendix
+	\section{Mathematical background}
 		\input{appendix.tex}
 	
 	\newpage

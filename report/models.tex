@@ -38,8 +38,68 @@ In what follows, we (and the robot) assume that the global frame coincides with 
 		\vect{r}_t = g(\vect{r}_{t-1},\, \vect{u}_t)
 	\]
 	
-	
-	
 	\paragraph{Example: Differential robot on the plane.}
-		Suppose we only own a two-wheeled, differential robot having no odometric sensor, which is often the case in experimental setups. 
-	
+		Suppose we only own a two-wheeled, differential robot having no odometric sensor, which is often the case in experimental setups.
+		The distance between the wheels is $2L$.
+		Suppose we want to experiment the SLAM problem on planar arena containing some obstacles.
+		Finally, suppose that each step of the robot controller is executed after ${\Delta T}_t$ seconds since the end of the previous step and that the duration of each step is negligible.
+		Under such assumptions, movements relative to the $z$-axis are not so relevant: we are only interested in the robot to solve the SLAM problem on the 2D plane.
+		In this setting we can assume the robot pose vector to be the triplet $\vect{r}_t = (x_t,\, y_t,\, \theta_t)^\top$, \ie{} the position and bearing of the robot w.r.t. the global frame, and the control vector to be the triplet $\vect{u}_t = (v_{l,t},\, v_{r,t},\, {\Delta T}_t)^\top$, \ie{} the velocities imposed to the wheels actuators at the end of the previous control step and the time elapsed since that moment.
+		Notice that, if we assume ${\Delta T}_t$ to be constant, the control vector is the pair $\vect{u}_t = (v_{l,t},\, v_{r,t})^\top$.
+		Under such hypotheses, the motion model could be defined as follows\footnote{\label{sec.models.alert}\notationAlert}:
+		\begin{equation}
+			\label{eq.motion.differential}
+			\left(\begin{array}{c}
+				x \\ y \\ \theta
+			\end{array}\right)
+			\leftarrow
+			\left(\begin{array}{ccc}
+				\cos{\theta} & -\sin{\theta} & 0 \\
+				\sin{\theta} & \cos{\theta} & 0 \\
+				0 & 0 & 1
+			\end{array}\right)
+			\cdot {\Delta T} \cdot I \cdot
+			\left(\begin{array}{c}
+				\frac{v_l + v_r}{2} \\ 
+				0 \\
+				\frac{v_r - v_l}{2L}
+			\end{array}\right)
+			+
+			\left(\begin{array}{c}
+				x \\ y \\ \theta
+			\end{array}\right)
+		\end{equation}
+		where ${\Delta T} \cdot I$ is a diagonal $3 \times 3$ matrix having each element on the diagonal equal to ${\Delta T}$.
+		Equation \ref{eq.motion.differential} computes the translation and rotation the robot performed within its reference frame during the last control step as a function of the velocity imposed to the wheels. 
+		Such values are converted into the map frame and added to the previous position and orientation in order to achieve the new ones. 
+		
+		Please consider reading Appendix \ref{app.affine2d} and \ref{app.differential_drive} in order to recall conversions between reference frames and differential drive.
+		
+	\paragraph{Example: The odometric sensor.}
+		Suppose our robot is embodied with an odometric sensor, which periodically provides a triplet $(dh,\, dl, d\theta)^\top$, \ie{} the variations in the heading and lateral directions and the angular variation since the last update. 
+		Such variations are of course relative to the robot frame.
+		We assume such a sensor frequency to be high.
+		In this case the motion model could be simply defined as follows\footnoteref{sec.models.alert}:
+		\begin{equation}
+			\label{eq.motion.odometrix}
+			\left(\begin{array}{c}
+				x \\ y \\ \theta
+			\end{array}\right)
+			\leftarrow
+			\left(\begin{array}{ccc}
+				\cos{\theta} & -\sin{\theta} & 0 \\
+				\sin{\theta} & \cos{\theta} & 0 \\
+				0 & 0 & 1
+			\end{array}\right)
+			\cdot
+			\left(\begin{array}{c}
+				dh \\
+				dl \\
+				d\theta
+			\end{array}\right)
+			+
+			\left(\begin{array}{c}
+				x \\ y \\ \theta
+			\end{array}\right)
+		\end{equation}
+		This means the variations relative to the robot frame are simply converted into the map frame.
