@@ -10,6 +10,7 @@
 \usepackage{amssymb}
 \usepackage{graphicx}
 \usepackage{subcaption}
+\usepackage{amsthm}
 
 \makeatletter
 \newcommand\footnoteref[1]{\protected@xdef\@thefnmark{\ref{#1}}\@footnotemark}
@@ -17,6 +18,9 @@
 
 \numberwithin{equation}{section}
 \renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\theoremstyle{remark}
+\newtheorem*{important}{Important}
 
 % macros
 \newcommand{\eg}{e.g.,}
@@ -46,6 +50,9 @@
 		
 	\section{Models and Reference Frames}
 		\input{models.tex}
+		
+	\section{\Ekf}
+		\input{ekf.tex}
 		
 	\newpage
 	\appendix

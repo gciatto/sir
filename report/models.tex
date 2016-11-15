@@ -29,7 +29,7 @@ It is important to understand that several Frames of Reference (\FoR{}) are invo
 	
 \end{itemize}
 
-Please note that, since part of the SLAM process is to build a map of the environment under the hypothesis that the robot has no prior knowledge about it, there is no constraint on how the robot should choose the initial global frame.
+Since part of the SLAM process is to build a map of the environment under the hypothesis that the robot has no prior knowledge about it, there is no constraint on how the robot should choose the initial global frame.
 In what follows, we (and the robot) assume that the global frame coincides with the initial robot frame, \ie{} the map frame is defined by the initial pose of the robot into the environment: the origin is its \emph{very first} position, the abscissas axis is its \emph{initial} heading direction and, consequently, the ordinate axis is its \emph{initial} lateral direction.
 
 \subsection{The motion model}
@@ -38,6 +38,8 @@ In what follows, we (and the robot) assume that the global frame coincides with 
 	\[
 		\vect{r}_t = g(\vect{r}_{t-1},\, \vect{u}_t)
 	\]
+	
+	The motion model aims to keep track the robot movements in order to provide an updated estimation of its pose vector.
 	
 	\paragraph{Example: Differential robot on the plane.}
 		Suppose we only own a two-wheeled, differential robot having no odometric sensor, which is often the case in experimental setups.
@@ -104,13 +106,20 @@ In what follows, we (and the robot) assume that the global frame coincides with 
 			\end{array}\right)
 		\end{equation}
 		This means the variations relative to the robot frame are simply converted into the map frame.
+		
+		\begin{important}
+			Always take care of normalizing the angle $\theta + d\theta$, since it's a sum of angles.
+		\end{important}
 
 \subsection{The inverse observation model}
-	The inverse observation model is a function $\eta : \mathbb{R}^p \times \mathbb{R}^n \rightarrow \mathbb{R}^q$ mapping a measurement vector, $\vect{s}_{t} \in \mathbb{R}^p$, \ie{} the vector containing the data identifying an obstacle from the exteroceptive sensor (w.r.t. the \emph{sensor} frame), into the position vector of the corresponding landmark, $\vect{m}_{t} \in \mathbb{R}^q$, which is relative to the \emph{global} frame, by taking into account the current \emph{robot} pose vector $\vect{r}_t \in \mathbb{R}^n$.
+	The inverse observation model is a function $\eta : \mathbb{R}^n \times \mathbb{R}^p \rightarrow \mathbb{R}^q$ mapping a measurement vector, $\vect{s}_{t} \in \mathbb{R}^p$, \ie{} the vector containing the data identifying an obstacle from the exteroceptive sensor (w.r.t. the \emph{sensor} frame), into the position vector, $\vect{m}_{t} \in \mathbb{R}^q$, of the corresponding landmark (which is relative to the \emph{global} frame), by taking into account the current \emph{robot} pose vector $\vect{r}_t \in \mathbb{R}^n$.
 	More formally:
 	\[
-	\vect{m}_t = \eta(\vect{r}_{t},\, \vect{s}_t)
+		\vect{m}_t = \eta(\vect{r}_{t},\, \vect{s}_t)
 	\]
+	
+	The inverse observation model aims to produce an estimation of the position vector for some maybe-unknown landmark taking into account the measurement vector received by the exteroceptive sensor and the current estimation of the robot pose.
+	Such estimation is compared with the known landmarks positions in order to understand if it is relative to one of them.
 	
 	\paragraph{Example: Laser scanner on top of a robot.}
 		Suppose a laser scanner is located in position $(d_h,\,d_l)^\top$ within the robot frame\footnote{coordinates are expressed w.r.t. the $h$eading and $l$ateral axes}.
@@ -121,7 +130,7 @@ In what follows, we (and the robot) assume that the global frame coincides with 
 		For what concerns this example, we suppose that $W_H = (\,-\pi,\, \pi\,]$ and $W_V = \{\, \pi / 2 \,\}$, \ie{} the robot can perceive obstacles in any direction on the horizontal plane.
 		In the real case, one may take into account that the sensor be in an higher position than the robot and therefore not being able to perceive shorter obstacles.
 		
-		Under such hypotheses\footnote{the subscript indicating the computational step is omitted in order to keep the notation readable}, the measurement vector is the distance-and-angle pair $\vect{s} = (\rho,\, \alpha)^\top$, the landmark position is the pair $\vect{m} = (x_m,\, y_m)^\top$, and the inverse observation model can be simply defined as follows:
+		Under such hypotheses\footnote{\label{sec.models.subscript}the subscript indicating the computational step is omitted in order to keep the notation readable}, the measurement vector is the distance-and-angle pair $\vect{s} = (\rho,\, \alpha)^\top$, the landmark position is the pair $\vect{m} = (x_m,\, y_m)^\top$, and the inverse observation model can be simply defined as follows:
 		\begin{equation}
 			\label{eq.inv_observation.laser}
 			\left(\begin{array}{c}
@@ -149,7 +158,7 @@ In what follows, we (and the robot) assume that the global frame coincides with 
 			\end{array}\right)
 		\end{equation}
 		
-		Please note that, if $d_x = d_y = 0$, \ie{} sensor is located into the robot center, Equation \ref{eq.inv_observation.laser} can be reduced:
+		Please note that, if $d_x = d_y = 0$, \ie{} sensor is located into the robot center, Equation \ref{eq.inv_observation.laser} can reduces to:
 		\[
 			\left(\begin{array}{c}
 				x_m \\ y_m
@@ -162,9 +171,77 @@ In what follows, we (and the robot) assume that the global frame coincides with 
 			\end{array}\right)
 			+
 			\left(\begin{array}{c}
-			x \\ y
+				x \\ y
 			\end{array}\right)
 		\]
 		
+		\begin{figure}
+			\centering
+			\includegraphics[width=0.5\textwidth]{./img/observation.png}
+			\caption{Direct and inverse observation on the 2D plane.}
+			\label{fig.observation}
+		\end{figure}
 		
+\subsection{The (direct) observation model}
+	The observation model is a function $h : \mathbb{R}^n \times \mathbb{R}^q \rightarrow \mathbb{R}^p$ mapping the position vector $\vect{m}_t \in \mathbb{R}^q$ of some landmark (which is relative to the \emph{global} frame), into the measurement vector, $\vect{s}_{t} \in \mathbb{R}^p$, (w.r.t. the \emph{sensor} frame) expected for that landmark. 
+	It takes into account the current \emph{robot} pose vector $\vect{r}_t \in \mathbb{R}^n$.
+	More formally:
+	\[
+		\vect{s}_t = h(\vect{r}_{t},\, \vect{m}_t)
+	\]
+	
+	The observation model aims to produce an estimation of the measurement vector for some known landmark taking into account the current estimation of the robot pose vector and the landmark position vector. 
+	Such estimation is compared with the actual measurement vector relative to the recognized landmark and their difference is used to reduce the current uncertainty about the robot pose. 
+	
+	\paragraph{Example: Laser scanner on top of a robot.}
+		Here we consider the same hypotheses of the previous example\footnoteref{sec.models.subscript}.
+		Let $(x_s,\, x_s)^\top$ be the position of the sensor w.r.t. the \emph{global} frame: the same position is $(d_h,\, d_l)^\top$ within the \emph{robot} frame.
+		The equation relating the two coordinate frames is the following:
+		\begin{equation}
+			\left(\begin{array}{c}
+				x_s \\ y_s
+			\end{array}\right)
+			=
+			\left(\begin{array}{ccc}
+				\cos{\theta} & -\sin{\theta} \\
+				\sin{\theta} & \cos{\theta}
+			\end{array}\right)
+			\cdot
+			\left(\begin{array}{c}
+				d_h \\ d_l
+			\end{array}\right)
+			+
+			\left(\begin{array}{c}
+				x \\ y
+			\end{array}\right)
+		\end{equation}
+		Notice that $(x_s,\, y_s)^\top$ is the origin of the \emph{sensor} frame and that the measurement vector $\vect{s} = (\rho,\, \alpha)^\top$ consists of the polar coordinates of the landmark position $\vect{m} = (x_m,\, y_m)^\top$ according to such frame.
+		So, the observation model is simply:
+		\[
+			\left(\begin{array}{c}
+				\rho \\ \alpha
+			\end{array}\right)
+			=
+			\left(\begin{array}{ccc}
+				\sqrt{(x_m - x_s)^2 + (y_m - y_s)^2} \\
+				\mathrm{atan2}(y_m - y_s,\ x_m - x_s) - \theta
+			\end{array}\right)
+		\]
+		where $x_s$ and $y_s$ are both functions of $x$, $y$ and $\theta$.
 		
+		Please note that, if $d_x = d_y = 0$, then $(x_s,\, y_s)^\top \equiv (x,\, y)^\top$, so the motion model reduces to: 
+		\[
+			\left(\begin{array}{c}
+				\rho \\ \alpha
+			\end{array}\right)
+			=
+			\left(\begin{array}{ccc}
+				\sqrt{(x_m - x)^2 + (y_m - y)^2} \\
+				\mathrm{atan2}(y_m - y,\ x_m - x) - \theta
+			\end{array}\right)
+		\]
+		which is indeeds a far simpler expression.
+		
+		\begin{important}
+			Always take care of normalizing the angle $\alpha$, since it's a subtraction of angles.
+		\end{important}
