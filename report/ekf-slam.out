@@ -4,8 +4,9 @@
 \BOOKMARK [2][-]{subsection.2.2}{The inverse observation model}{section.2}% 4
 \BOOKMARK [2][-]{subsection.2.3}{The \(direct\) observation model}{section.2}% 5
 \BOOKMARK [1][-]{section.3}{Extended Kalman Filter}{}% 6
-\BOOKMARK [1][-]{appendix.A}{Mathematical background}{}% 7
-\BOOKMARK [2][-]{subsection.A.1}{Affine transformations on the plane}{appendix.A}% 8
-\BOOKMARK [2][-]{subsection.A.2}{Multivariate normal distribution}{appendix.A}% 9
-\BOOKMARK [2][-]{subsection.A.3}{Differential drive}{appendix.A}% 10
-\BOOKMARK [2][-]{subsection.A.4}{Linearization of vectorial function}{appendix.A}% 11
+\BOOKMARK [2][-]{subsection.3.1}{The system state}{section.3}% 7
+\BOOKMARK [1][-]{appendix.A}{Mathematical background}{}% 8
+\BOOKMARK [2][-]{subsection.A.1}{Affine transformations on the plane}{appendix.A}% 9
+\BOOKMARK [2][-]{subsection.A.2}{Multivariate normal distribution}{appendix.A}% 10
+\BOOKMARK [2][-]{subsection.A.3}{Differential drive}{appendix.A}% 11
+\BOOKMARK [2][-]{subsection.A.4}{Linearization of vectorial function}{appendix.A}% 12

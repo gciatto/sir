@@ -40,6 +40,8 @@
 	where $(x,\,y)^\top$ is a point in the source reference frame, $(x',\,y')^\top$ is the transformed reference frame, $(t_x,\,t_y)^\top$ is a translation vector, $s_x$ and $s_y$ are scale factors for the horizontal and vertical coordinates, respectively, and $\theta$ is the angle between the source reference frame abscissas axis and the transformed frame one. 
 
 \subsection{Multivariate normal distribution}
+	\label{app.multinormal}
+	
 	Here we recall the notion of multivariate normal distribution and its linearity and geometric properties.
 	Let $\vect{x} \in \mathbb{R}^n$ be a normally distributed vector having mean $\vect{\mu} \in \mathbb{R}^n$ and covariances matrix $\Sigma \in \mathcal{M}_{n \times n}(\mathbb{R})$, then we write: 
 	\[
@@ -138,5 +140,24 @@
 		\end{equation}
 		
 	\subsection{Linearization of vectorial function}
-		\label{app.differential_drive}
-		TODO: scrivere
+		\label{app.jacobian}
+		Let $\mathrm{f} : \mathbb{R}^n \rightarrow \mathbb{R}^m$ a non-linear function.
+		If $f(\vect{x})$ is \emph{continuous} and \emph{differentiable} in some point $\vect{p} \in \mathbb{R}^n$ then it can be locally approximated as follows:
+		\begin{equation}
+			\mathrm{f}(\vect{x}) \stackrel{\vect{x} \rightarrow \vect{p}}{=} \mathrm{f}(\vect{p}) + \frac{\partial\mathrm{f}(\vect{p})}{\partial\vect{x}} \cdot (\vect{x} - \vect{p}) + o(\| \vect{x} - \vect{p} \|)
+		\end{equation}
+		where ${\partial\mathrm{f}(\vect{p})}/{\partial\vect{x}}$ is the \emph{Jacobian} of function $\mathrm{f}$ in $\vect{p}$. This is a generalization of the Taylor series first order approximation for the multidimensional case. 
+		
+		The Jacobian of some function $\mathrm{f}(\vect{x}) = (\, f_1(\vect{x}),\, \ldots,\, f_m(\vect{x}) \,)^\top$ w.r.t. some variable vector $\vect{x} = (x_1,\, \ldots,\, x_n)^\top$ is the matrix of partial derivatives of the components of $\mathrm{f}$ respect to the components components of $\vect{x}$:
+		\begin{equation}
+			\arraycolsep=.1pt\def\arraystretch{1.5}
+			\frac{\partial\mathrm{f}(\vect{x})}{\partial\vect{x}} \stackrel{def}{=}
+			\left(\begin{array}{cccc}
+				\frac{\partial f_1(\vect{x})}{\partial x_1} & \frac{\partial f_1(\vect{x})}{\partial x_2} & \cdots & \frac{\partial f_1(\vect{x})}{\partial x_n} \\
+				\frac{\partial f_2(\vect{x})}{\partial x_1} & \frac{\partial f_2(\vect{x})}{\partial x_2} & \cdots & \frac{\partial f_2(\vect{x})}{\partial x_n} \\
+				\vdots & \vdots & \ddots & \vdots \\
+				\frac{\partial f_m(\vect{x})}{\partial x_1} & \frac{\partial f_m(\vect{x})}{\partial x_2} & \cdots & \frac{\partial f_m(\vect{x})}{\partial x_n} \\
+			\end{array}\right)
+		\end{equation}
+		
+		

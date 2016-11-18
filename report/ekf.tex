@@ -1,1 +1,24 @@
 Here we describe and motivate the \EKF{} algorithm allowing us to face the \SLAM{} problem.
+
+\subsection{The system state}
+	Here we define the concept of (system) \emph{state}, which will be pervasively used in the following.
+	
+	The system state $\vect{x}_t$ consist of the robot pose vector $\vect{r}_t$ and the position vector $\vect{m}_{1},\, \vect{m}_{2},\, \ldots,\, \vect{m}_{M}$ of each known landmark. It is indeed defined the concatenation of such vectors:
+	\[
+		\vect{x}_t \stackrel{def}{=}
+		\left(\begin{array}{c}
+			\vect{r}_t \\ \vect{m}_{1} \\ \vect{m}_{2} \\ \vdots \\ \vect{m}_{M}
+		\end{array}\right)
+		=
+		\left(\begin{array}{c}
+			\vect{r}_t \\ \vect{m}
+		\end{array}\right)
+		\in \mathbb{R}^{n + M \cdot q}
+	\]
+	where $\vect{m} \in \mathbb{R}^{M \cdot q}$ is a compact way to express the concatenation of all the known landmarks.
+	
+	The purpose of the \EKF-\SLAM{} algorithm is to produce and update an estimation of the state vector exploiting the exteroceptive and proprioceptive data. 
+	It is important to understand that the robot \emph{cannot} know its exact state because of the noise afflicting sensors and actuators.
+	Hence, we assume the state to be a multi-normal random vector (please refer to Appendix \ref{app.multinormal} for details) for which we assume to know the initial mean $\bvect{x}_0$ and covariances matrix $\Sigma_0$.
+	The \EKF-\SLAM{} algorithm allows to compute the mean $\bvect{x}_t$ and covariances matrix $\Sigma_t$ of the current state as a function of the mean $\bvect{x}_{t - 1}$ and covariances matrix $\Sigma_{t - 1}$ of the previous state.
+	
