@@ -1,9 +1,9 @@
-Here we describe and motivate the \EKF{} algorithm allowing us to face the \SLAM{} problem.
+In this section we describe and motivate the \EKF{} algorithm allowing us to face the \SLAM{} problem.
 
 \subsection{The system state}
 	Here we define the concept of (system) \emph{state}, which will be pervasively used in the following.
 	
-	The system state $\vect{x}_t$ consist of the robot pose vector $\vect{r}_t$ and the position vector $\vect{m}_{1},\, \vect{m}_{2},\, \ldots,\, \vect{m}_{M}$ of each known landmark. It is indeed defined the concatenation of such vectors:
+	The system state $\vect{x}_t$ consist of the robot pose vector $\vect{r}_t$ and the position vector $\vect{m}_{1},\, \vect{m}_{2},\, \ldots,\, \vect{m}_{M}$ of each known landmark. It is indeed defined as the concatenation of such vectors:
 	\[
 		\vect{x}_t \stackrel{def}{=}
 		\left(\begin{array}{c}
@@ -15,10 +15,122 @@ Here we describe and motivate the \EKF{} algorithm allowing us to face the \SLAM
 		\end{array}\right)
 		\in \mathbb{R}^{n + M \cdot q}
 	\]
-	where $\vect{m} \in \mathbb{R}^{M \cdot q}$ is a compact way to express the concatenation of all the known landmarks.
+	where $\vect{m} \in \mathbb{R}^{M \cdot q}$ is a compact way to express the concatenation of all the known landmarks position vectors.
 	
 	The purpose of the \EKF-\SLAM{} algorithm is to produce and update an estimation of the state vector exploiting the exteroceptive and proprioceptive data. 
 	It is important to understand that the robot \emph{cannot} know its exact state because of the noise afflicting sensors and actuators.
 	Hence, we assume the state to be a multi-normal random vector (please refer to Appendix \ref{app.multinormal} for details) for which we assume to know the initial mean $\bvect{x}_0$ and covariances matrix $\Sigma_0$.
 	The \EKF-\SLAM{} algorithm allows to compute the mean $\bvect{x}_t$ and covariances matrix $\Sigma_t$ of the current state as a function of the mean $\bvect{x}_{t - 1}$ and covariances matrix $\Sigma_{t - 1}$ of the previous state.
+	The mean $\bvect{x}_t$ represents the most recent estimation of the robot pose and landmarks positions, while the covariances matrix $\Sigma_t$ stores the uncertainty of such estimation.
+	
+	Generally speaking, the mean and covariances are in the following form:
+	\[
+		\bvect{x}_t =
+		\left(\begin{array}{c}
+			\bvect{r}_t \\ \bvect{m}_{1,t} \\ \bvect{m}_{2,t} \\ \vdots \\ \bvect{m}_{M,t}
+		\end{array}\right)
+		=
+		\left(\begin{array}{c}
+			\bvect{r}_t \\ \bvect{m}_t
+		\end{array}\right)
+		\in \mathbb{R}^{n + M \cdot q}
+	\]
+	(notice that the expected position $\bvect{m}_{i,t}$ of any landmark may vary --- \ie{} be corrected --- as time progresses, while the actual position $\vect{m}_{i}$ is supposed not to change)
+	\[
+		\Sigma_t =
+		\left(\begin{array}{cc}
+			\sigma_{\vect{r},\vect{r}, t} & \sigma_{\vect{r},\vect{m}, t} \\
+			\sigma_{\vect{m},\vect{r}, t} & \sigma_{\vect{m},\vect{m}, t}
+		\end{array}\right)
+		\in \mathcal{M}_{(n + M \cdot q) \times (n + M \cdot q)}(\mathbb{R})
+	\]
+	where $\sigma_{\vect{r},\vect{r}, t} \in \mathcal{M}_{n \times n}(\mathbb{R})$ is the sub-matrix containing the covariances of the pose, $\sigma_{\vect{r},\vect{m}, t} \in \mathcal{M}_{n \times M \cdot q}(\mathbb{R})$ is the sub-matrix containing the covariances of the pose w.r.t. the landmark positions,  $\sigma_{\vect{m},\vect{r}, t} = \sigma^\top_{\vect{r},\vect{m}, t}$, since $\Sigma_t$ must be symmetric, and $\sigma_{\vect{m},\vect{m}, t} \in \mathcal{M}_{M \cdot q \times M \cdot q}(\mathbb{R})$ is the sub-matrix containing the covariances of the landmark positions.
+	
+	Please notice that $M$, \ie{} the number of currently known and mapped landmarks, may actually vary as the robot moves, since more landmarks may be discovered.
+	
+	\subsubsection{The initial state}
+	
+		As stated before, we (and the robot) assume that the global frame coincides with the robot frame at the very first step of the \SLAM{} algorithm. We also assume that the robot has no prior knowledge about the landmarks positions, \ie{} $M_0 = 0$.
+		This implies that:
+		\[
+			\bvect{x}_0 = \bvect{r}_0 = \vect{0}
+			\hspace{2cm}
+			\Sigma_0 = \vect{0}
+		\]
+		meaning that the robot is supposed to have \emph{null uncertainty} about its initial position to be the origin of the global frame.
+		
+		In what follows we will explain:
+		\begin{itemize}
+			\item How $\bvect{x}_t$ and $\Sigma_t$ can be extended when a measurement vector $\vect{s}$ detects an unknown landmark
+			\item How $\bvect{x}_t$ and $\Sigma_t$ can be computed as functions of $\bvect{x}_{t-1}$ and $\Sigma_{t-1}$, taking into account the last control vector $\vect{u}_t$ and some measurement vector $\vect{s}$ relative to some known landmark
+		\end{itemize}
+		
+\subsection{The system and observation errors}
+	TODO write this
+		
+\subsection{The prediction phase}
+	In the prediction phase the motion model $g(\cdot)$ is exploited to produce an estimation of the current robot state $\bvect{x}_t$ taking into account the previous robot state $\bvect{x}_{t-1}$ and the last control vector $\bvect{u}_t$.
+	The uncertainty about the system state $\Sigma_t$ is computed accordingly.
+	
+	Conceptually, this step is simple: the robot just needs to compute\footnote{\label{sec.ekf.alert}\notationAlert}
+	\[
+		\vect{x} \leftarrow f(\vect{x},\, \vect{u})
+	\]
+	where $f$ is the function applying the motion model to the first $n$ components of $\vect{x}$ and leaving the others unchanged\footnoteref{sec.ekf.alert}:
+	\[
+		\vect{x} = 
+		\left(\begin{array}{c}
+			\vect{r} \\ \vect{m}
+		\end{array}\right)
+		\leftarrow
+		\left(\begin{array}{c}
+			g(\vect{r},\, \vect{u}) \\ \vect{m}
+		\end{array}\right) 
+		= f(\vect{x},\, \vect{u})
+	\]
+	Sadly, the robot never knows the \emph{real} system state or control vector or landmark positions, but it only knows their means and covariances as multi-normal variables.
+	Mathematically, this step is complicated by $g(\cdot)$ being, in general, non-linear.
+	So, while applying a linear transformation to some multi-normal variables moments, as explained in Appendix \ref{app.multinormal}, surely produces two multi-normal variable moments; applying a non-linear transformation does not guarantee so.
+	This limitation is overcome by linearizing the $f$ function into the point $(\bvect{x}_{t-1},\, \bvect{u}_{t})^\top$ as explained in Appendix \ref{app.jacobian}.
+	
+	Hence, the predicted robot state mean $\bvect{x}_t$ is computed as follows\footnoteref{sec.ekf.alert}:
+	\begin{equation}
+		\label{eq.prediction.mean.update}
+		\bvect{x} = 
+		\left(\begin{array}{c}
+			\bvect{r} \\ \bvect{m}
+		\end{array}\right)
+		\leftarrow
+		\left(\begin{array}{c}
+			g(\bvect{r},\, \bvect{u}) \\ \bvect{m}
+		\end{array}\right)
+		= f(\bvect{x},\, \bvect{u})
+	\end{equation}
+	assuming that the robot motion do not affect the landmark positions.
+	
+	Linearizing $f$ allows us to compute the predicted robot state covariances matrix $\Sigma_t$.
+	Such step is usually presented as follows\footnoteref{sec.ekf.alert}:
+	\begin{equation}
+		\label{eq.prediction.sigma.jacobians}
+		\Sigma_t = F_{\vect{x}} \cdot \Sigma_{t-1} \cdot F^\top_{\vect{x}} \ + \ F_{\vect{u}} \cdot E \cdot F^\top_{\vect{u}}
+	\end{equation}
+	where $F_{\vect{x}} = \partial f(\bvect{x}_{t-1},\, \bvect{u}_{t}) / \partial \vect{x}$ and $F_{\vect{u}} = \partial f(\bvect{x}_{t-1},\, \bvect{u}_{t}) / \partial \vect{u}$ are the Jacobians of the $f$ function into the point $(\bvect{x}_{t-1},\, \bvect{u}_{t})^\top$ w.r.t. the system state and the control, respectively. 
+	
+	Since we assumed the $f$ function not affecting the landmarks positions, Equation \ref{eq.prediction.sigma.jacobians} reduces to the following update rules\footnoteref{sec.ekf.alert}:
+	\begin{equation}
+		\label{eq.prediction.covs.update.rr}
+		\sigma_{\vect{r},\vect{r}} \leftarrow G_{\vect{r}} \cdot \sigma_{\vect{r},\vect{r}} \cdot G^\top_{\vect{r}} \ + \ G_{\vect{u}} \cdot E \cdot G^\top_{\vect{u}}
+	\end{equation}
+	\begin{equation}
+		\label{eq.prediction.covs.update.rm}
+		\sigma_{\vect{r},\vect{m}} \leftarrow G_{\vect{r}} \cdot \sigma_{\vect{r},\vect{m}}
+	\end{equation}
+	\begin{equation}
+		\label{eq.prediction.covs.update.mr}
+		\sigma_{\vect{m},\vect{r}} \leftarrow \sigma^\top_{\vect{r},\vect{m}}
+	\end{equation}
+	\begin{equation}
+		\label{eq.prediction.covs.update.mm}
+		\sigma_{\vect{m},\vect{m}} \leftarrow \sigma_{\vect{m},\vect{m}}
+	\end{equation}
 	
