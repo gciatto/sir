@@ -6,10 +6,11 @@
 \BOOKMARK [1][-]{section.3}{Extended Kalman Filter}{}% 6
 \BOOKMARK [2][-]{subsection.3.1}{The system state}{section.3}% 7
 \BOOKMARK [3][-]{subsubsection.3.1.1}{The initial state}{subsection.3.1}% 8
-\BOOKMARK [2][-]{subsection.3.2}{The system and observation errors}{section.3}% 9
-\BOOKMARK [2][-]{subsection.3.3}{The prediction phase}{section.3}% 10
-\BOOKMARK [1][-]{appendix.A}{Mathematical background}{}% 11
-\BOOKMARK [2][-]{subsection.A.1}{Affine transformations on the plane}{appendix.A}% 12
-\BOOKMARK [2][-]{subsection.A.2}{Multivariate normal distribution}{appendix.A}% 13
-\BOOKMARK [2][-]{subsection.A.3}{Differential drive}{appendix.A}% 14
-\BOOKMARK [2][-]{subsection.A.4}{Linearization of vectorial function}{appendix.A}% 15
+\BOOKMARK [2][-]{subsection.3.2}{Handling the noise}{section.3}% 9
+\BOOKMARK [3][-]{subsubsection.3.2.1}{The system noise}{subsection.3.2}% 10
+\BOOKMARK [2][-]{subsection.3.3}{The prediction phase}{section.3}% 11
+\BOOKMARK [1][-]{appendix.A}{Mathematical background}{}% 12
+\BOOKMARK [2][-]{subsection.A.1}{Affine transformations on the plane}{appendix.A}% 13
+\BOOKMARK [2][-]{subsection.A.2}{Multivariate normal distribution}{appendix.A}% 14
+\BOOKMARK [2][-]{subsection.A.3}{Differential drive}{appendix.A}% 15
+\BOOKMARK [2][-]{subsection.A.4}{Linearization of vectorial function}{appendix.A}% 16

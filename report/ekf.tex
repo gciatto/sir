@@ -62,11 +62,35 @@ In this section we describe and motivate the \EKF{} algorithm allowing us to fac
 		In what follows we will explain:
 		\begin{itemize}
 			\item How $\bvect{x}_t$ and $\Sigma_t$ can be extended when a measurement vector $\vect{s}$ detects an unknown landmark
-			\item How $\bvect{x}_t$ and $\Sigma_t$ can be computed as functions of $\bvect{x}_{t-1}$ and $\Sigma_{t-1}$, taking into account the last control vector $\vect{u}_t$ and some measurement vector $\vect{s}$ relative to some known landmark
+			\item How $\bvect{x}_t$ and $\Sigma_t$ can be computed as functions of $\bvect{x}_{t-1}$ and $\Sigma_{t-1}$, taking into accounterror the last control vector $\vect{u}_t$ and some measurement vector $\vect{s}$ relative to some known landmark
 		\end{itemize}
 		
-\subsection{The system and observation errors}
-	TODO write this
+\subsection{Handling the noise}
+	Here we discuss about how to handle the intrinsic noise afflicting the robot sensors and actuators.
+	
+	\subsubsection{The system noise}
+	
+		Whenever the control software imposes (resp. receives) a control vector $\vect{u}_t$ to the robot actuators (resp. from the proprioceptive sensor), we assume such data to be inherently altered by the system noise $\vect{\varepsilon}_t \in \mathbb{R}^m$, \ie{} the actual control vector perceived by the actuators (resp. proprioceptive sensor) is:
+		\[
+			{\vect{u}'}_t = \vect{u}_t + \vect{\varepsilon}_t
+		\]
+		For what concerns the \EKF{}, it is important for $\vect{\varepsilon}_t$ to be modeled as a multi-normal random vector with null mean and covariances matrix $E \in \mathcal{M}_{m \times m}(\mathbb{R})$.
+		
+		We can therefore consider the control vector $\bvect{u}_t$ provided to the \EKF{} to be the expected value of a multi-normal distribution with covariances matrix $E$.
+		
+		\paragraph{Example: Differential robot on the plane.}
+			In this case we assume the left and right wheel actuators to be affected by a normally distributed error with null mean and standard deviations $\sigma_l$ and $\sigma_r$, respectively.
+			This means that, whenever the velocity $v_l$ (resp. $v_r$) is imposed to the left (resp. right) wheel actuator, the real speed of the left (resp. right) wheel will be $v_l + \varepsilon_l$ (resp. $v_r + \varepsilon_r$), where $\varepsilon_l$ (resp. $\varepsilon_r$) will be in $[\, -3\sigma_l, +3\sigma_l \,]$ (resp. $[\, -3\sigma_r, +3\sigma_r \,]$) with about 99\% probability.
+			
+			Under such hypotheses, the covariances matrix of $\vect{\varepsilon} = (\varepsilon_l,\, \varepsilon_r)^\top$ is:
+			\[
+				E = 
+				\left(\begin{array}{cc}
+					\sigma^2_l & 0 \\
+					0 & \sigma^2_r
+				\end{array}\right)
+			\]
+			Notice that here we are implicitly supposing the left and right error to be uncorrelated, which is, in general, not true\footnote{non ne sono sicuro, TODO cercare informazioni a riguardo}.
 		
 \subsection{The prediction phase}
 	In the prediction phase the motion model $g(\cdot)$ is exploited to produce an estimation of the current robot state $\bvect{x}_t$ taking into account the previous robot state $\bvect{x}_{t-1}$ and the last control vector $\bvect{u}_t$.
@@ -133,4 +157,10 @@ In this section we describe and motivate the \EKF{} algorithm allowing us to fac
 		\label{eq.prediction.covs.update.mm}
 		\sigma_{\vect{m},\vect{m}} \leftarrow \sigma_{\vect{m},\vect{m}}
 	\end{equation}
+	
+	Notice that, under such assumptions, the uncertainty related to the landmarks positions is not affected by the robot motion. 
+	
+	\begin{recap}
+		The prediction phase consist of the update rules expressed by equations \ref{eq.prediction.mean.update}, \ref{eq.prediction.covs.update.rr}, \ref{eq.prediction.covs.update.rm}, \ref{eq.prediction.covs.update.mr} and \ref{eq.prediction.covs.update.mm}.
+	\end{recap}
 	
