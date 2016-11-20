@@ -11,8 +11,10 @@
 \BOOKMARK [3][-]{subsubsection.3.2.2}{The observation noise}{subsection.3.2}% 11
 \BOOKMARK [2][-]{subsection.3.3}{The prediction phase}{section.3}% 12
 \BOOKMARK [2][-]{subsection.3.4}{The observation phase}{section.3}% 13
-\BOOKMARK [1][-]{appendix.A}{Mathematical background}{}% 14
-\BOOKMARK [2][-]{subsection.A.1}{Affine transformations on the plane}{appendix.A}% 15
-\BOOKMARK [2][-]{subsection.A.2}{Multivariate normal distribution}{appendix.A}% 16
-\BOOKMARK [2][-]{subsection.A.3}{Differential drive}{appendix.A}% 17
-\BOOKMARK [2][-]{subsection.A.4}{Linearization of vectorial function}{appendix.A}% 18
+\BOOKMARK [2][-]{subsection.3.5}{The correction phase}{section.3}% 14
+\BOOKMARK [2][-]{subsection.3.6}{The recognition phase}{section.3}% 15
+\BOOKMARK [1][-]{appendix.A}{Mathematical background}{}% 16
+\BOOKMARK [2][-]{subsection.A.1}{Affine transformations on the plane}{appendix.A}% 17
+\BOOKMARK [2][-]{subsection.A.2}{Multivariate normal distribution}{appendix.A}% 18
+\BOOKMARK [2][-]{subsection.A.3}{Differential drive}{appendix.A}% 19
+\BOOKMARK [2][-]{subsection.A.4}{Linearization of vectorial function}{appendix.A}% 20

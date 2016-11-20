@@ -187,6 +187,7 @@ In this section we describe and motivate the \EKF{} algorithm allowing us to fac
 	\end{recap}
 	
 \subsection{The observation phase}
+	\label{sec.ekf.observation}
 	Suppose that $M > 0$, \ie{} the robot already knows some landmarks positions, and suppose its exteroceptive sensor produced a measurement vector $\bvect{s}_i$ which allowed to \emph{somehow} recognize the $i$-th landmark, whose currently estimated position is $\bvect{m}_{i,t}$ with uncertainty $\sigma_{\vect{m}_i,\vect{m}_i,t}$.
 	
 	This phase exploits the direct observation model $h(\cdot)$ to estimate the moments of the multi-normally distributed random vector $\vect{z} \in \mathbb{R}^p$ (a.k.a. the \emph{correction}) representing the difference between the actual measurement $\bvect{s}_i$ and the expected one $h(\bvect{r}_t,\, \bvect{m}_{i,t})$ considering the current robot pose $\bvect{r}_t$.
@@ -205,14 +206,23 @@ In this section we describe and motivate the \EKF{} algorithm allowing us to fac
 		\label{eq.observation.z}
 		\bvect{z} = \bvect{s} - \hat{h}_i(\bvect{x}_t) % = \bvect{s} - h(\bvect{r}_t,\, \bvect{m}_i)
 	\end{equation}
-	Linearizing $\hat{h}_i(\cdot)$ allows us to compute the correction covariances matrix $Z$. Such step is usually presented as follows:
+	Linearizing $\hat{h}_i(\cdot)$ allows us to compute the correction covariances matrix $Z \in \mathcal{M}_{p \times p}(\mathbb{R})$. Such step is usually presented as follows:
 	\begin{equation}
 		\label{eq.observation.Z}
 		Z = \hat{H}_{i,\vect{x}} \cdot \Sigma_t \cdot \hat{H}^\top_{i,\vect{x}} + \Delta
 	\end{equation}
 	where $\hat{H}_{i,\vect{x}} = \partial \hat{h}_i(\bvect{x}_{t}) / \partial \vect{x}$ is the Jacobian of the $\hat{h}_i(\cdot)$ function into the point $\bvect{x}_{t}$ w.r.t. the system state, and $\Delta$ is the covariances matrix of the observation noise.
 	
-	Since the $\hat{h}_i(\cdot)$ function, by definition, only takes into account $\bvect{r}_t$ and $\bvect{m}_{i,t}$, Equations \ref{eq.observation.z} and \ref{eq.observation.Z} reduce to:
+	The $\hat{h}_i(\cdot)$ function, by definition, only takes into account $\bvect{r}_t$ and $\bvect{m}_{i,t}$, and consequently it is easy to demonstrate that $\hat{H}_{i,\vect{x}}$ is in the form:
+	\begin{equation}
+		\label{eq.observation.sparse_jacobian}
+		\hat{H}_{i,\vect{x}} = 
+		\left(\begin{array}{cccccccc}
+			H_{\vect{r}} & \vect{0} & \cdots & \vect{0} & H_{\vect{m}_i} & \vect{0} & \cdots & \vect{0}
+		\end{array}\right)
+	\end{equation}
+	where $H_{\vect{r}} = \partial h(\bvect{r}_{t},\, \bvect{m}_{i,t}) / \partial \vect{r}$ and $H_{\vect{m}_i} = \partial h(\bvect{r}_{t},\, \bvect{m}_{i,t}) / \partial \vect{m}_i$ are the Jacobians of the observation model $h(\cdot)$ into the point $(\bvect{r}_{t},\, \bvect{m}_{i,t})^\top$ w.r.t. the robot pose and $i$-th landmark position, respectively.
+	Thus, Equations \ref{eq.observation.z} and \ref{eq.observation.Z} reduce to:
 	\begin{equation}
 		\label{eq.observation.mean}
 		\bvect{z} = \bvect{s} - h(\bvect{r}_t,\, \bvect{m}_i)
@@ -234,9 +244,57 @@ In this section we describe and motivate the \EKF{} algorithm allowing us to fac
 		\end{array}\right)
 		+ \Delta
 	\end{equation}
-	where $H_{\vect{r}} = \partial h(\bvect{r}_{t},\, \bvect{m}_{i,t}) / \partial \vect{r}$ and $H_{\vect{m}_i} = \partial h(\bvect{r}_{t},\, \bvect{m}_{i,t}) / \partial \vect{m}_i$ are the Jacobians of the observation model $h(\cdot)$ into the point $(\bvect{r}_{t},\, \bvect{m}_{i,t})^\top$ w.r.t. the robot pose and $i$-th landmark position, respectively.
+	where $\Delta$ is the observation noise.
 	
 	\begin{recap}
-		The observation phase consists of equations \ref{eq.observation.mean} and \ref{eq.observation.covs}.
+		The observation phase consists of Equations \ref{eq.observation.mean} and \ref{eq.observation.covs}.
 	\end{recap}
 	
+\subsection{The correction phase}
+	This phase exploits the correction moments $\bvect{z}$ and $Z$, produced by the observation phase for the $i$-th landmark, to correct the robot state moments $\bvect{x}_t$ and $\Sigma_t$ produced by the prediction phase. 
+	In other words, the correction phase improves the estimation about the robot pose and the landmarks positions taking into account the difference between the expected and actual measurements of the $i$-th landmark.
+	
+	Such a step only consists of algebraic operations. 
+	An clear intuition of what follows can be found in \cite[Unit C]{brenner204}.
+	For a more exhaustive explanation, refer to \cite[Ch. 3]{thrun2005}.
+	
+	The correction phase is usually presented as composed by the following equations:
+	\begin{equation}
+		\label{eq.correction.K}
+		K = \Sigma_t \cdot \hat{H}^\top_{i,\vect{x}} \cdot Z^{-1}
+	\end{equation}
+	\begin{equation}
+		\label{eq.correction.x}
+		\bvect{x}_t \leftarrow \bvect{x}_t + K \cdot \bvect{z}
+	\end{equation}
+	\begin{equation}
+		\label{eq.correction.Sigma}
+		\Sigma_t \leftarrow \Sigma_t \ - \ K \cdot Z \cdot K^\top
+	\end{equation}
+	where $K \in \mathcal{M}_{(n + M \cdot q) \times p}(\mathbb{R})$ is the so-called \emph{Kalman gain} and $\hat{H}_{i,\vect{x}}$ is the Jacobian of the function $\hat{h}_i$ into the point $\bvect{x}_t$ w.r.t. the state vector, as defined in Subsection \ref{sec.ekf.observation}.
+	
+	The Kalman gain definition can be simplified, since the Jacobian $\hat{H}_{i,\vect{x}}$ is sparse, as shown in Equation \ref{eq.observation.sparse_jacobian}.
+	Therefore, Equation \ref{eq.correction.K} reduces to:
+	\begin{equation}
+		\label{eq.correction.kalman_gain}
+		K = 
+		\left(\begin{array}{cc}
+			\sigma_{\vect{r}, \vect{r}, t} & \sigma_{\vect{r}, \vect{m}_i, t} \\
+			\sigma_{\vect{m}, \vect{r}, t} & \sigma_{\vect{m}, \vect{m}_i, t}
+		\end{array}\right)
+		\cdot
+		\left(\begin{array}{c}
+			H^\top_{\vect{r}} \\ H^\top_{\vect{m}_i}
+		\end{array}\right)
+		\cdot
+		Z^{-1}
+	\end{equation}
+	
+	The new moments of the robot state, $\bvect{x}_t$ and $\Sigma_t$, produced by the correction phase, represent the outcome of the $t$-th step of the \EKF{} algorithm and, consequently, the input of the $(t+1)$-th prediction phase.
+	
+	\begin{recap}
+		The correction step consist of Equations \ref{eq.correction.kalman_gain}, \ref{eq.correction.x} and \ref{eq.correction.Sigma}.
+	\end{recap}
+	
+\subsection{The recognition phase}
+	TO-DO: write this
