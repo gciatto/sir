@@ -109,36 +109,6 @@
 		\]
 		where $\vect{c} \in \{\, (x_1,\, \ldots,\,\ x_n)^\top \in \mathbb{R}^n \ |\  x_1^2 + \ldots + x_n^2 = 1 \,\}$.
 		
-	\subsection{Differential drive}
-		\label{app.differential_drive}
-	
-		A differential robot can only exploit two non-rotating wheels. 
-		Its actuators can simply impose a velocity value to each wheel. 
-		We will call $v_l$ and $v_r$ the left and right speed value, while the distance between the wheels is $2L$.
-		Here we recall how the linear velocity value $v$ in the heading direction and the angular velocity $\omega$, w.r.t. the \emph{instantaneous center of curvature}, can be computed as a function of $v_l$ and $v_r$:
-		\begin{equation}
-			\left(\begin{array}{c}
-				v \\ \omega
-			\end{array}\right)
-			=
-			\left(\begin{array}{c}
-				v_{l,r} \\ 0
-			\end{array}\right)
-			\ \mathrm{if} \ v_l = v_r = v_{l,r}
-		\end{equation}
-		\begin{equation}
-			\left(\begin{array}{c}
-				v \\ 
-				\omega
-			\end{array}\right)
-			=
-			\left(\begin{array}{c}
-				\frac{v_l + v_r}{2} \\ 
-				\frac{v_r - v_l}{2L}
-			\end{array}\right)
-			\ \mathrm{if} \ v_l \neq v_r
-		\end{equation}
-		
 	\subsection{Linearization of vectorial function}
 		\label{app.jacobian}
 		Let $\mathrm{f} : \mathbb{R}^n \rightarrow \mathbb{R}^m$ a non-linear function.
@@ -159,5 +129,37 @@
 				\frac{\partial f_m(\vect{x})}{\partial x_1} & \frac{\partial f_m(\vect{x})}{\partial x_2} & \cdots & \frac{\partial f_m(\vect{x})}{\partial x_n} \\
 			\end{array}\right)
 		\end{equation}
+	
+	\subsection{Mahalonobis Distance}
+		\label{app.mahalonobis}
+		% TO-DO: write this
+		TO-DO: write this
+	
+	\subsection{Differential drive}
+		\label{app.differential_drive}
 		
-		
+		A differential robot can only exploit two non-rotating wheels. 
+		Its actuators can simply impose a velocity value to each wheel. 
+		We will call $v_l$ and $v_r$ the left and right speed value, while the distance between the wheels is $2L$.
+		Here we recall how the linear velocity value $v$ in the heading direction and the angular velocity $\omega$, w.r.t. the \emph{instantaneous center of curvature}, can be computed as a function of $v_l$ and $v_r$:
+		\begin{equation}
+			\left(\begin{array}{c}
+				v \\ \omega
+			\end{array}\right)
+			=
+			\left(\begin{array}{c}
+				v_{l,r} \\ 0
+			\end{array}\right)
+			\ \mathrm{if} \ v_l = v_r = v_{l,r}
+		\end{equation}
+		\begin{equation}
+			\left(\begin{array}{c}
+				v \\ \omega
+			\end{array}\right)
+			=
+			\left(\begin{array}{c}
+				\frac{v_l + v_r}{2} \\ 
+				\frac{v_r - v_l}{2L}
+			\end{array}\right)
+			\ \mathrm{if} \ v_l \neq v_r
+		\end{equation}
