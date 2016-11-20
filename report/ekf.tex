@@ -62,24 +62,23 @@ In this section we describe and motivate the \EKF{} algorithm allowing us to fac
 		In what follows we will explain:
 		\begin{itemize}
 			\item How $\bvect{x}_t$ and $\Sigma_t$ can be extended when a measurement vector $\vect{s}$ detects an unknown landmark
-			\item How $\bvect{x}_t$ and $\Sigma_t$ can be computed as functions of $\bvect{x}_{t-1}$ and $\Sigma_{t-1}$, taking into accounterror the last control vector $\vect{u}_t$ and some measurement vector $\vect{s}$ relative to some known landmark
+			\item How $\bvect{x}_t$ and $\Sigma_t$ can be computed as functions of $\bvect{x}_{t-1}$ and $\Sigma_{t-1}$, taking into account the last control vector $\vect{u}_t$ and some measurement vector $\vect{s}$ relative to some known landmark
 		\end{itemize}
 		
 \subsection{Handling the noise}
-	Here we discuss about how to handle the intrinsic noise afflicting the robot sensors and actuators.
+	Here we discuss about how to model the intrinsic noise afflicting the robot sensors and actuators.
 	
 	\subsubsection{The system noise}
-	
-		Whenever the control software imposes (resp. receives) a control vector $\vect{u}_t$ to the robot actuators (resp. from the proprioceptive sensor), we assume such data to be inherently altered by the system noise $\vect{\varepsilon}_t \in \mathbb{R}^m$, \ie{} the actual control vector perceived by the actuators (resp. proprioceptive sensor) is:
+		Whenever the control software imposes (resp. receives) a control vector $\vect{u}_t$ to the robot actuators (resp. from the proprioceptive sensor), we assume such data to be inherently altered by the \emph{system} noise $\vect{\varepsilon}_t \in \mathbb{R}^m$, \ie{} the actual control vector perceived by the actuators (resp. proprioceptive sensor) is:
 		\[
 			{\vect{u}'}_t = \vect{u}_t + \vect{\varepsilon}_t
 		\]
 		For what concerns the \EKF{}, it is important for $\vect{\varepsilon}_t$ to be modeled as a multi-normal random vector with null mean and covariances matrix $E \in \mathcal{M}_{m \times m}(\mathbb{R})$.
 		
-		We can therefore consider the control vector $\bvect{u}_t$ provided to the \EKF{} to be the expected value of a multi-normal distribution with covariances matrix $E$.
+		We can therefore consider the control vector $\bvect{u}_t$ provided to the \EKF{} to be the expected value of the multi-normally distributed random vector ${\vect{u}'}_t$, having covariances matrix $E$.
 		
 		\paragraph{Example: Differential robot on the plane.}
-			In this case we assume the left and right wheel actuators to be affected by a normally distributed error with null mean and standard deviations $\sigma_l$ and $\sigma_r$, respectively.
+			In this case we assume the left and right wheel actuators to be affected by a normally distributed error with null mean and standard deviations $\sigma_l$ and $\sigma_r$ meters per second, respectively.
 			This means that, whenever the velocity $v_l$ (resp. $v_r$) is imposed to the left (resp. right) wheel actuator, the real speed of the left (resp. right) wheel will be $v_l + \varepsilon_l$ (resp. $v_r + \varepsilon_r$), where $\varepsilon_l$ (resp. $\varepsilon_r$) will be in $[\, -3\sigma_l, +3\sigma_l \,]$ (resp. $[\, -3\sigma_r, +3\sigma_r \,]$) with about 99\% probability.
 			
 			Under such hypotheses, the covariances matrix of $\vect{\varepsilon} = (\varepsilon_l,\, \varepsilon_r)^\top$ is:
@@ -90,17 +89,39 @@ In this section we describe and motivate the \EKF{} algorithm allowing us to fac
 					0 & \sigma^2_r
 				\end{array}\right)
 			\]
-			Notice that here we are implicitly supposing the left and right error to be uncorrelated, which is, in general, not true\footnote{non ne sono sicuro, TODO cercare informazioni a riguardo}.
+			Notice that here we are implicitly supposing the left and right error to be uncorrelated, which may be, in general, not true\footnote{\label{sec.ekf.not_sure}not sure about this, TO-DO: check}.
+			
+	\subsubsection{The observation noise}
+		Whenever the control software receives a measurement vector $\vect{s}$ from its exteroceptive sensor, we assume such data to be inherently altered be the \emph{observation} noise $\vect{\delta} \in \mathbb{R}^p$, \ie{} the actual measurement vector produced by the sensor is:
+		\[
+			\vect{s}' = \vect{s} + \vect{\delta}
+		\]
+		For what concerns the \EKF{}, it is important for $\vect{\delta}$ to be modeled as a multi-normal random vector with null mean and covariances matrix $\Delta \in \mathcal{M}_{p \times p}(\mathbb{R})$
+		
+		We can therefore consider each measurement vector $\bvect{s}$ provided to the \EKF{} to be the expected value of some multi-normally distributed random vector $\vect{s}'$, having covariances matrix $\Delta$.
+		
+		\paragraph{Example: Laser scanner on top of a robot.}
+			In this case we assume the laser sensor to be characterized by a normally distributed error with null mean for both the distance ($\delta_\rho$) and the angle ($\delta_\alpha$). The standard deviations of the distance error and the angular error are $\sigma_\rho$ meters and $\sigma_\alpha$ radians, respectively.
+			
+			Under such hypotheses, the covariances matrix of $\vect{\delta} = (\delta_\rho,\, \delta_\alpha)^\top$ is:
+			\[
+				\Delta =
+				\left(\begin{array}{cc}
+					\sigma^2_\rho & 0 \\
+					0 & \sigma^2_\alpha
+				\end{array}\right)
+			\]
+			Notice that here we are implicitly assuming that the distance and angle error are uncorrelated and that the distance error does not depend on the distance itself, which may be, in general, not true\footnoteref{sec.ekf.not_sure}.
 		
 \subsection{The prediction phase}
-	In the prediction phase the motion model $g(\cdot)$ is exploited to produce an estimation of the current robot state $\bvect{x}_t$ taking into account the previous robot state $\bvect{x}_{t-1}$ and the last control vector $\bvect{u}_t$.
+	In this phase the motion model $g(\cdot)$ is exploited to produce an estimation of the current robot state $\bvect{x}_t$ taking into account the previous robot state $\bvect{x}_{t-1}$ and the last control vector $\bvect{u}_t$.
 	The uncertainty about the system state $\Sigma_t$ is computed accordingly.
 	
 	Conceptually, this step is simple: the robot just needs to compute\footnote{\label{sec.ekf.alert}\notationAlert}
 	\[
-		\vect{x} \leftarrow f(\vect{x},\, \vect{u})
+		\vect{x} \leftarrow \hat{g}(\vect{x},\, \vect{u})
 	\]
-	where $f$ is the function applying the motion model to the first $n$ components of $\vect{x}$ and leaving the others unchanged\footnoteref{sec.ekf.alert}:
+	where $\hat{g}(\cdot)$ is the function applying the motion model $g(\cdot)$ to the first $n$ components of $\vect{x}$ and leaving the others unchanged\footnoteref{sec.ekf.alert}:
 	\[
 		\vect{x} = 
 		\left(\begin{array}{c}
@@ -110,12 +131,13 @@ In this section we describe and motivate the \EKF{} algorithm allowing us to fac
 		\left(\begin{array}{c}
 			g(\vect{r},\, \vect{u}) \\ \vect{m}
 		\end{array}\right) 
-		= f(\vect{x},\, \vect{u})
+		= \hat{g}(\vect{x},\, \vect{u})
 	\]
-	Sadly, the robot never knows the \emph{real} system state or control vector or landmark positions, but it only knows their means and covariances as multi-normal variables.
+	
+	Unfortunately, the robot never knows the \emph{real} system state or control vector or landmark positions, but it only knows their means and covariances as multi-normal variables.
 	Mathematically, this step is complicated by $g(\cdot)$ being, in general, non-linear.
-	So, while applying a linear transformation to some multi-normal variables moments, as explained in Appendix \ref{app.multinormal}, surely produces two multi-normal variable moments; applying a non-linear transformation does not guarantee so.
-	This limitation is overcome by linearizing the $f$ function into the point $(\bvect{x}_{t-1},\, \bvect{u}_{t})^\top$ as explained in Appendix \ref{app.jacobian}.
+	So, while applying a linear transformation to the moments of some multi-normal variables, as explained in Appendix \ref{app.multinormal}, surely produces the moments of a multi-normal variable; applying a non-linear transformation does not guarantee so.
+	This limitation is overcome by linearizing the $\hat{g}(\cdot)$ function into the point $(\bvect{x}_{t-1},\, \bvect{u}_{t})^\top$ as explained in Appendix \ref{app.jacobian}.
 	
 	Hence, the predicted robot state mean $\bvect{x}_t$ is computed as follows\footnoteref{sec.ekf.alert}:
 	\begin{equation}
@@ -128,19 +150,18 @@ In this section we describe and motivate the \EKF{} algorithm allowing us to fac
 		\left(\begin{array}{c}
 			g(\bvect{r},\, \bvect{u}) \\ \bvect{m}
 		\end{array}\right)
-		= f(\bvect{x},\, \bvect{u})
+		= \hat{g}(\bvect{x},\, \bvect{u})
 	\end{equation}
 	assuming that the robot motion do not affect the landmark positions.
-	
-	Linearizing $f$ allows us to compute the predicted robot state covariances matrix $\Sigma_t$.
-	Such step is usually presented as follows\footnoteref{sec.ekf.alert}:
+	Linearizing $\hat{g}(\cdot)$ allows us to compute the predicted robot state covariances matrix $\Sigma_t$.
+	Such step is usually presented as follows: %\footnoteref{sec.ekf.alert}:
 	\begin{equation}
 		\label{eq.prediction.sigma.jacobians}
-		\Sigma_t = F_{\vect{x}} \cdot \Sigma_{t-1} \cdot F^\top_{\vect{x}} \ + \ F_{\vect{u}} \cdot E \cdot F^\top_{\vect{u}}
+		\Sigma_t = \hat{G}_{\vect{x}} \cdot \Sigma_{t-1} \cdot \hat{G}^\top_{\vect{x}} \ + \ \hat{G}_{\vect{u}} \cdot E \cdot \hat{G}^\top_{\vect{u}}
 	\end{equation}
-	where $F_{\vect{x}} = \partial f(\bvect{x}_{t-1},\, \bvect{u}_{t}) / \partial \vect{x}$ and $F_{\vect{u}} = \partial f(\bvect{x}_{t-1},\, \bvect{u}_{t}) / \partial \vect{u}$ are the Jacobians of the $f$ function into the point $(\bvect{x}_{t-1},\, \bvect{u}_{t})^\top$ w.r.t. the system state and the control, respectively. 
+	where $\hat{G}_{\vect{x}} = \partial \hat{g}(\bvect{x}_{t-1},\, \bvect{u}_{t}) / \partial \vect{x}$ and $\hat{G}_{\vect{u}} = \partial \hat{g}(\bvect{x}_{t-1},\, \bvect{u}_{t}) / \partial \vect{u}$ are the Jacobians of the $\hat{g}(\cdot)$ function into the point $(\bvect{x}_{t-1},\, \bvect{u}_{t})^\top$ w.r.t. the system state and the control, respectively, and $E$ is the covariances matrix of the system noise. 
 	
-	Since we assumed the $f$ function not affecting the landmarks positions, Equation \ref{eq.prediction.sigma.jacobians} reduces to the following update rules\footnoteref{sec.ekf.alert}:
+	Since we assumed the $\hat{g}(\cdot)$ function not affecting the landmarks positions, Equation \ref{eq.prediction.sigma.jacobians} reduces to the following update rules\footnoteref{sec.ekf.alert}:
 	\begin{equation}
 		\label{eq.prediction.covs.update.rr}
 		\sigma_{\vect{r},\vect{r}} \leftarrow G_{\vect{r}} \cdot \sigma_{\vect{r},\vect{r}} \cdot G^\top_{\vect{r}} \ + \ G_{\vect{u}} \cdot E \cdot G^\top_{\vect{u}}
@@ -157,10 +178,65 @@ In this section we describe and motivate the \EKF{} algorithm allowing us to fac
 		\label{eq.prediction.covs.update.mm}
 		\sigma_{\vect{m},\vect{m}} \leftarrow \sigma_{\vect{m},\vect{m}}
 	\end{equation}
+	where $G_{\vect{x}} = \partial g(\bvect{x}_{t-1},\, \bvect{u}_{t}) / \partial \vect{x}$ and $G_{\vect{u}} = \partial g(\bvect{x}_{t-1},\, \bvect{u}_{t}) / \partial \vect{u}$ are the Jacobians of the motion model $g(\cdot)$ into the point $(\bvect{x}_{t-1},\, \bvect{u}_{t})^\top$ w.r.t. the system state and the control, respectively.
 	
 	Notice that, under such assumptions, the uncertainty related to the landmarks positions is not affected by the robot motion. 
 	
 	\begin{recap}
-		The prediction phase consist of the update rules expressed by equations \ref{eq.prediction.mean.update}, \ref{eq.prediction.covs.update.rr}, \ref{eq.prediction.covs.update.rm}, \ref{eq.prediction.covs.update.mr} and \ref{eq.prediction.covs.update.mm}.
+		The prediction phase consists of the update rules expressed by equations \ref{eq.prediction.mean.update}, \ref{eq.prediction.covs.update.rr}, \ref{eq.prediction.covs.update.rm}, \ref{eq.prediction.covs.update.mr} and \ref{eq.prediction.covs.update.mm}.
+	\end{recap}
+	
+\subsection{The observation phase}
+	Suppose that $M > 0$, \ie{} the robot already knows some landmarks positions, and suppose its exteroceptive sensor produced a measurement vector $\bvect{s}_i$ which allowed to \emph{somehow} recognize the $i$-th landmark, whose currently estimated position is $\bvect{m}_{i,t}$ with uncertainty $\sigma_{\vect{m}_i,\vect{m}_i,t}$.
+	
+	This phase exploits the direct observation model $h(\cdot)$ to estimate the moments of the multi-normally distributed random vector $\vect{z} \in \mathbb{R}^p$ (a.k.a. the \emph{correction}) representing the difference between the actual measurement $\bvect{s}_i$ and the expected one $h(\bvect{r}_t,\, \bvect{m}_{i,t})$ considering the current robot pose $\bvect{r}_t$.
+	
+	Conceptually this step is simple: the robot just needs to compute: %\footnoteref{sec.ekf.alert}:
+	\[
+		\vect{z} = \vect{s} - \hat{h}_i(\vect{x}_t) = \vect{s} - h(\vect{r}_t,\, \vect{m}_i)
+	\]
+	where $\hat{h}_i(\cdot)$ is the function applying the direct observation model to the current robot pose $\vect{r}_t$ and the $i$-th landmark position $\vect{m}_i$ and ignoring the other landmarks stored into the state vector $\vect{x}_t$.
+	
+	Sadly, as for the prediction phase, the robot never knows its \emph{real} pose or any landmark position, but it only knows their first and second order moments as multi-normal variables. Mathematically, this step is complicated by $h(\cdot)$ being, in general, non-linear.
+	As for the motion model, this limitation is overcome by linearizing the $\hat{h}_i(\cdot)$ function into the point $\bvect{x}_t$, as explained in Appendix \ref{app.jacobian}.
+	
+	So, the correction mean $\bvect{z}$ is computed as follows:
+	\begin{equation}
+		\label{eq.observation.z}
+		\bvect{z} = \bvect{s} - \hat{h}_i(\bvect{x}_t) % = \bvect{s} - h(\bvect{r}_t,\, \bvect{m}_i)
+	\end{equation}
+	Linearizing $\hat{h}_i(\cdot)$ allows us to compute the correction covariances matrix $Z$. Such step is usually presented as follows:
+	\begin{equation}
+		\label{eq.observation.Z}
+		Z = \hat{H}_{i,\vect{x}} \cdot \Sigma_t \cdot \hat{H}^\top_{i,\vect{x}} + \Delta
+	\end{equation}
+	where $\hat{H}_{i,\vect{x}} = \partial \hat{h}_i(\bvect{x}_{t}) / \partial \vect{x}$ is the Jacobian of the $\hat{h}_i(\cdot)$ function into the point $\bvect{x}_{t}$ w.r.t. the system state, and $\Delta$ is the covariances matrix of the observation noise.
+	
+	Since the $\hat{h}_i(\cdot)$ function, by definition, only takes into account $\bvect{r}_t$ and $\bvect{m}_{i,t}$, Equations \ref{eq.observation.z} and \ref{eq.observation.Z} reduce to:
+	\begin{equation}
+		\label{eq.observation.mean}
+		\bvect{z} = \bvect{s} - h(\bvect{r}_t,\, \bvect{m}_i)
+	\end{equation}
+	\begin{equation}
+		\label{eq.observation.covs}
+		Z = 
+		\left(\begin{array}{cc}
+			H_{\vect{r}} & H_{\vect{m}_i}
+		\end{array}\right)
+		\cdot
+		\left(\begin{array}{cc}
+			\sigma_{\vect{r}, \vect{r}, t} & \sigma_{\vect{r}, \vect{m}_i, t} \\
+			\sigma_{\vect{m_i}, \vect{r}, t} & \sigma_{\vect{m}_i, \vect{m}_i, t}
+		\end{array}\right)
+		\cdot
+		\left(\begin{array}{c}
+			H^\top_{\vect{r}} \\ H^\top_{\vect{m}_i}
+		\end{array}\right)
+		+ \Delta
+	\end{equation}
+	where $H_{\vect{r}} = \partial h(\bvect{r}_{t},\, \bvect{m}_{i,t}) / \partial \vect{r}$ and $H_{\vect{m}_i} = \partial h(\bvect{r}_{t},\, \bvect{m}_{i,t}) / \partial \vect{m}_i$ are the Jacobians of the observation model $h(\cdot)$ into the point $(\bvect{r}_{t},\, \bvect{m}_{i,t})^\top$ w.r.t. the robot pose and $i$-th landmark position, respectively.
+	
+	\begin{recap}
+		The observation phase consists of equations \ref{eq.observation.mean} and \ref{eq.observation.covs}.
 	\end{recap}
 	
