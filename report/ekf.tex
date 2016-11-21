@@ -182,6 +182,7 @@ In this section we describe and motivate the \EKF{} algorithm allowing us to fac
 	
 	Notice that, under such assumptions, the uncertainty related to the landmarks positions is not affected by the robot motion. 
 	
+	\vspace{1cm}
 	\begin{recap}
 		The prediction phase consists of the update rules expressed by equations \ref{eq.prediction.mean.update}, \ref{eq.prediction.covs.update.rr}, \ref{eq.prediction.covs.update.rm}, \ref{eq.prediction.covs.update.mr} and \ref{eq.prediction.covs.update.mm}.
 	\end{recap}
@@ -246,6 +247,7 @@ In this section we describe and motivate the \EKF{} algorithm allowing us to fac
 	\end{equation}
 	where $\Delta$ is the observation noise.
 	
+	\vspace{1cm}
 	\begin{recap}
 		The observation phase consists of Equations \ref{eq.observation.mean} and \ref{eq.observation.covs}.
 	\end{recap}
@@ -292,18 +294,19 @@ In this section we describe and motivate the \EKF{} algorithm allowing us to fac
 	
 	The new moments of the robot state, $\bvect{x}_t$ and $\Sigma_t$, produced by the correction phase, represent the outcome of the $t$-th step of the \EKF{} algorithm and, consequently, the input of the $(t+1)$-th prediction phase.
 	
+	\vspace{1cm}
 	\begin{recap}
 		The correction step consist of Equations \ref{eq.correction.kalman_gain}, \ref{eq.correction.x} and \ref{eq.correction.Sigma}.
 	\end{recap}
 	
 
 \subsection{The recognition phase}
-	This phase exploits the inverse observation model $\eta(\cdot)$ to discriminate between known and unknown landmarks. 
-	It is essentially a classification problem: some unclassified measurement vector $\bvect{s}_?$, received by the exteroceptive sensor, is mapped into the corresponding point $\bvect{m}_?$ within the global frame, according to the inverse observation model and the current estimation of the robot pose $\bvect{r_t}$:
+	This phase exploits the inverse observation model $\lambda(\cdot)$ to discriminate between known and unknown landmarks. 
+	It is essentially a classification problem with $M + 1$ possible classes.
+	Some unclassified measurement vector $\bvect{s}_?$, received by the exteroceptive sensor, is mapped into the corresponding point $\bvect{m}_?$ within the global frame, according to the inverse observation model and the current estimation of the robot pose $\bvect{r_t}$:
 	\[
-		\bvect{m}_? = \eta(\bvect{r_t},\, \bvect{s}_?)
+		\bvect{m}_? = \lambda(\bvect{r_t},\, \bvect{s}_?)
 	\]
-	
 	The $\bvect{m}_?$ vector is then compared with every currently known landmark $\bvect{m}_{i,t}$ in $\bvect{x}_t$, in order to determine if it corresponds to one of them. 
 	If it doesn't, it is considered a new landmark and the state vector is updated accordingly, as explained in Section \ref{sec.state_extension}.
 	The way such comparison is performed is the actual core of the recognition phase. 
@@ -321,8 +324,88 @@ In this section we describe and motivate the \EKF{} algorithm allowing us to fac
 		The vector $\bvect{m}_?$ is considered coincident with the first $\bvect{m}_{i,t}$ such that $d_M\leq D_{min}$, where $D_{min}$ is some predefined distance threshold.
 		
 		The problem with this approach is that it is more computationally expensive of the euclidean approach.
+	
+	\vspace{1cm}	
+	\begin{recap}
+		The recognition phase aims to classify the inverse observation of some measurement vector as a known or unknown landmark.
+	\end{recap}
 		
 \subsection{Extending the system state with a new landmark}
 	\label{sec.state_extension}
-	% TO-DO: write this
-	TO-DO: write this
+	
+	Whenever the recognition phase fails in classifying some measurement $\bvect{s}_?$ as corresponding to some known landmark, it is considered as corresponding to a new landmark $\bvect{m}_{M+1}$:
+	\[
+		\bvect{m}_{M+1} = \lambda(\bvect{r_t},\, \bvect{s}_?)
+	\]
+	and the current system state mean $\bvect{x}_{t}$ and covariances matrix $\Sigma_t$ must be updated accordingly.
+	
+	Updating $\bvect{x}_{t}$ is trivial.
+	It is sufficient to append the new landmark position to $\bvect{x}_{t}$, since $\bvect{m}_{M+1}$ is actually the best estimation of the new landmark position currently available:
+	\begin{equation}
+		\label{eq.extension.state.mean}
+		\vect{x}_t =
+		\left(\begin{array}{c}
+			\bvect{r}_t \\ \bvect{m}_{1,t} \\ \bvect{m}_{2,t} \\ \vdots \\ \bvect{m}_{M,t}
+		\end{array}\right)
+		\leftarrow
+		\left(\begin{array}{c}
+			\bvect{r}_t \\ \bvect{m}_{1,t} \\ \bvect{m}_{2,t} \\ \vdots \\ \bvect{m}_{M,t} \\ \hline \bvect{m}_{M + 1}
+		\end{array}\right)
+		\in \mathbb{R}^{n + (M + 1) \cdot q}
+	\end{equation}
+	
+	In order to keep the system state consistent, $\Sigma_{t}$ must be consequently extended with 3 more sub-matrices, representing the initial uncertainty related to the new landmark position:
+	\begin{equation}
+		\label{eq.extension.state.covs}
+		\Sigma_t =
+		\left(\begin{array}{cc}
+			\sigma_{\vect{r}, \vect{r}, t} & \sigma_{\vect{r}, \vect{m}, t} \\
+			\sigma_{\vect{m}, \vect{r}, t} & \sigma_{\vect{m}, \vect{m}, t}
+		\end{array}\right)
+		\leftarrow
+		\left(\begin{array}{cc|c}
+			\sigma_{\vect{r},\vect{r},t} & \sigma_{\vect{r},\vect{m},t} & \multicolumn{1}{c}{\multirow{2}{*}{$\sigma_{\vect{m}_{M+1},\vect{x}}$}}\\
+			\sigma_{\vect{m},\vect{r},t} & \sigma_{\vect{m},\vect{m},t} & \\
+			\hline
+			\multicolumn{2}{c|}{\sigma_{\vect{x},\vect{m}_{M+1}}} & \sigma_{\vect{m}_{M+1},\vect{m}_{M+1}}
+		\end{array}\right)
+		\in \mathcal{M}_{(n + (M + 1) \cdot q) \times (n + (M + 1) \cdot q)}(\mathbb{R})
+	\end{equation}
+	such that, of course, $\sigma_{\vect{m}_{M+1},\vect{x}} = \sigma^\top_{\vect{x},\vect{m}_{M+1}}$.
+	Several strategies can be exploited to fill such sub-matrices, some of them are described in the following examples.
+	
+	\begin{important}
+		Regardless of the way Equation \ref{eq.extension.state.covs} is actually implemented, the final update to be performed is:
+		\begin{equation}
+			M \leftarrow M + 1
+		\end{equation}
+	\end{important}
+	
+	\paragraph{Example: Infinite uncertainty of uncorrelated landmark.}
+		This is a very trivial approach to $\sigma_{\vect{m}_{M+1},\vect{m}_{M+1}}$ and $\sigma_{\vect{m}_{M+1},\vect{x}}$ initialization.
+		We simply assume that:
+		\begin{itemize}
+			\item The newly discovered landmark position is uncorrelated with the current robot state, therefore: 
+				\[
+					\sigma_{\vect{m}_{M+1},\vect{x}} = \vect{0}
+				\]
+			\item The initial uncertainty related to the landmark position is infinite\footnote{real-life implementation should use some considerably high value instead of $\infty$}, so:
+				\[
+					\sigma_{\vect{m}_{M+1},\vect{m}_{M+1}} = 
+					\left(\begin{array}{cccc}
+						\infty & & \multicolumn{2}{c}{\multirow{2}{*}{$0$}}\\
+						& \infty & & \\
+						\multicolumn{2}{c}{\multirow{2}{*}{$0$}} & \ddots & \\
+						& & & \infty 
+					\end{array}\right)
+				\]
+		\end{itemize}
+		
+	\paragraph{Example: Mapping the observation error into the global frame.}
+		The uncertainty related to the landmark position is actually implicitly known.
+		Informally, it is ``caused'' by the uncertainty related to the robot position in the global frame (that we express as $\sigma_{\vect{r}, \vect{r}, t}$) combined to the uncertainty related to the measurement $\bvect{s}_?$ in the sensor frame, \ie{} the observation noise (that we express as $\Delta$).
+		We assumed the observation noise to be multi-normally distributed within the sensor frame, but, since the inverse observation model $\lambda(\dot)$ is in general non-linear, we cannot assume it to be multi-normally distributed within the global frame.
+		Such limitation is, as usual, overcome by linearizing the $\lambda(\dot)$ function into the point $(\bvect{r}_t,\, \bvect{s}_?)$, so we can state:
+%		\[
+%			\sigma_{\vect{m}_{M+1},\vect{m}_{M+1}} 
+%		\]

@@ -3,7 +3,7 @@
 \BOOKMARK [2][-]{subsection.2.1}{The motion model}{section.2}% 3
 \BOOKMARK [2][-]{subsection.2.2}{The inverse observation model}{section.2}% 4
 \BOOKMARK [2][-]{subsection.2.3}{The \(direct\) observation model}{section.2}% 5
-\BOOKMARK [1][-]{section.3}{Extended Kalman Filter}{}% 6
+\BOOKMARK [1][-]{section.3}{EKF-SLAM Concepts \046 Phases}{}% 6
 \BOOKMARK [2][-]{subsection.3.1}{The system state}{section.3}% 7
 \BOOKMARK [3][-]{subsubsection.3.1.1}{The initial state}{subsection.3.1}% 8
 \BOOKMARK [2][-]{subsection.3.2}{Handling the noise}{section.3}% 9

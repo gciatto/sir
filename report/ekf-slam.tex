@@ -5,12 +5,24 @@
 \usepackage[english]{babel}
 \usepackage{url}
 \usepackage[colorlinks]{hyperref}
+\usepackage{array}
+\usepackage{arydshln}
+%\usepackage{amsmath}
+%\usepackage{array}
+%\usepackage{arydshln}
+\usepackage{multirow}
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{amssymb}
 \usepackage{graphicx}
 \usepackage{subcaption}
 \usepackage{amsthm}
+\usepackage[scaled]{helvet}
+
+\renewcommand\familydefault{\sfdefault} 
+\usepackage[T1]{fontenc}
+
+% \renewcommand{\baselinestretch}{1.5} 
 
 \makeatletter
 \newcommand\footnoteref[1]{\protected@xdef\@thefnmark{\ref{#1}}\@footnotemark}
@@ -61,7 +73,7 @@
 	\section{Models and Reference Frames}
 		\input{models.tex}
 		
-	\section{\Ekf}
+	\section{\EKF{}-\SLAM{} Concepts \& Phases}
 		\input{ekf.tex}
 		
 	\newpage

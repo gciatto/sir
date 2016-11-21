@@ -112,10 +112,10 @@ In what follows, we (and the robot) assume that the global frame coincides with 
 		\end{important}
 
 \subsection{The inverse observation model}
-	The inverse observation model is a function $\eta : \mathbb{R}^n \times \mathbb{R}^p \rightarrow \mathbb{R}^q$ mapping a measurement vector, $\vect{s}_{t} \in \mathbb{R}^p$, \ie{} the vector containing the data identifying an obstacle from the exteroceptive sensor (w.r.t. the \emph{sensor} frame), into the position vector, $\vect{m}_{t} \in \mathbb{R}^q$, of the corresponding landmark (which is relative to the \emph{global} frame), by taking into account the current \emph{robot} pose vector $\vect{r}_t \in \mathbb{R}^n$.
+	The inverse observation model is a function $\lambda : \mathbb{R}^n \times \mathbb{R}^p \rightarrow \mathbb{R}^q$ mapping a measurement vector, $\vect{s}_{t} \in \mathbb{R}^p$, \ie{} the vector containing the data identifying an obstacle from the exteroceptive sensor (w.r.t. the \emph{sensor} frame), into the position vector, $\vect{m}_{t} \in \mathbb{R}^q$, of the corresponding landmark (which is relative to the \emph{global} frame), by taking into account the current \emph{robot} pose vector $\vect{r}_t \in \mathbb{R}^n$.
 	More formally:
 	\[
-		\vect{m}_t = \eta(\vect{r}_{t},\, \vect{s}_t)
+		\vect{m}_t = \lambda(\vect{r}_{t},\, \vect{s}_t)
 	\]
 	
 	The inverse observation model aims to produce an estimation of the position vector for some maybe-unknown landmark taking into account the measurement vector received by the exteroceptive sensor and the current estimation of the robot pose.
