@@ -132,8 +132,12 @@
 	
 	\subsection{Mahalonobis Distance}
 		\label{app.mahalonobis}
-		% TO-DO: write this
-		TO-DO: write this
+		Let $\mathcal{N}(\vect{\mu},\, \Sigma)$ some multi-normally distributed vector and let $\vect{x}$ be a vector, then the Mahalonobis distance of $\vect{x}$ from the distribution expected value $\mu$ is defined as follows:
+		\begin{equation}
+			d_M(\vect{x},\, \vect{\mu},\, \Sigma) \stackrel{def}{=} \sqrt{(\vect{x} - \vect{\mu})^\top \cdot \Sigma^{-1} \cdot (\vect{x} - \vect{\mu})}
+		\end{equation} 
+		
+		Such a metric function takes into account the correlation between the distribution dimensions and is therefore a better choice than e.g. the Euclidean distance when some correlated vectors must be compared.
 	
 	\subsection{Differential drive}
 		\label{app.differential_drive}

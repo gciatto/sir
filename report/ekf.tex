@@ -404,8 +404,17 @@ In this section we describe and motivate the \EKF{} algorithm allowing us to fac
 	\paragraph{Example: Mapping the observation error into the global frame.}
 		The uncertainty related to the landmark position is actually implicitly known.
 		Informally, it is ``caused'' by the uncertainty related to the robot position in the global frame (that we express as $\sigma_{\vect{r}, \vect{r}, t}$) combined to the uncertainty related to the measurement $\bvect{s}_?$ in the sensor frame, \ie{} the observation noise (that we express as $\Delta$).
-		We assumed the observation noise to be multi-normally distributed within the sensor frame, but, since the inverse observation model $\lambda(\dot)$ is in general non-linear, we cannot assume it to be multi-normally distributed within the global frame.
-		Such limitation is, as usual, overcome by linearizing the $\lambda(\dot)$ function into the point $(\bvect{r}_t,\, \bvect{s}_?)$, so we can state:
-%		\[
-%			\sigma_{\vect{m}_{M+1},\vect{m}_{M+1}} 
-%		\]
+		We assumed the observation noise to be multi-normally distributed within the sensor frame, but, since the inverse observation model $\lambda(\cdot)$ is in general non-linear, we cannot assume it to be multi-normally distributed within the global frame.
+		Such limitation is, as usual, overcome by linearizing the $\lambda(\cdot)$ function into the point $(\bvect{r}_t,\, \bvect{s}_?)$, so we can state:
+		\[
+			\sigma_{\vect{m}_{M+1},\vect{m}_{M+1}} = \Lambda_{\vect{r}} \cdot \sigma_{\vect{r},\vect{r}} \cdot \Lambda^\top_{\vect{r}} \ + \ \Lambda_{\vect{m}_{M+1}} \cdot \Delta \cdot \Lambda^\top_{\vect{m}_{M+1}}
+		\]
+		where $\Lambda_{\vect{r}} = \partial \lambda(\bvect{r}_{t},\, \bvect{s}_?) / \partial \vect{r}$ and $\Lambda_{\vect{m}_{M+1}} = \partial \lambda(\bvect{r}_{t},\, \bvect{s}_?) / \partial \vect{m}_{M+1}$ are the Jacobians of the inverse observation model $\lambda(\cdot)$ into the point $(\bvect{r}_{t},\, \bvect{s}_?)^\top$ w.r.t. the robot pose and new landmark position, respectively.
+		
+		Since the uncertainty of the new landmark also depends on the uncertainty of the robot pose, we finally state:
+		\[
+			\sigma_{\vect{m}_{M+1},\vect{x}} = \Lambda_{\vect{r}} \cdot 
+			\left(\begin{array}{cc}
+				\sigma_{\vect{r}, \vect{r}, t} & \sigma_{\vect{r}, \vect{m}, t}
+			\end{array}\right)
+		\]
