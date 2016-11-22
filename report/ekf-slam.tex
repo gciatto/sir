@@ -18,6 +18,9 @@
 \usepackage{subcaption}
 \usepackage{amsthm}
 \usepackage[scaled]{helvet}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
 
 \renewcommand\familydefault{\sfdefault} 
 \usepackage[T1]{fontenc}
@@ -73,9 +76,12 @@
 	\section{Models and Reference Frames}
 		\input{models.tex}
 		
-	\section{\EKF{}-\SLAM{} Concepts \& Phases}
+	\section{\Ekf{} Phases}
+		\label{sec.ekf_phases}
 		\input{ekf.tex}
 		
+	\section{Algorithm for \Slam{}}
+		\input{alg.tex}
 	\newpage
 	\appendix
 	\section{Mathematical background}
