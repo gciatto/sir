@@ -1,15 +1,15 @@
 In the context of robotics, \Slam{} (\SLAM) is the problem of a robot dynamically constructing a map of an unknown environment and concurrently localizing itself within it, while exploring such environment. 
 It may seem a chicken-or-egg problem, since a map is needed for localization and a frame of reference is needed for building a map, but the problem has been studied and solved both from a theoretical (probabilistic) and practical point of view in \cite{thrun2005}.
 
-\SLAM{} involves a robotic agent being at least able to move within, and gather information about, the environment. Wheels and laser scanners are common choices to satisfy such requirements. 
+\SLAM{} involves a robotic agent being able at least to move within and gather information about the environment. Wheels and laser scanners are common choices to satisfy such requirements. 
 Generally speaking, we will refer to them as \emph{actuators} and \emph{exteroceptive sensors}, respectively. 
-Optionally, the robot may be equipped with one or more \emph{odometric} sensors allowing it to actually measure its own movement, which should otherwise be inferred, \eg{} by the speed imposed to the wheels. 
+Optionally, the robot may be equipped with one or more \emph{odometric} sensors allowing it to actually measure its own movement, which should otherwise be inferred, by the speed imposed to the wheels, for instance. 
 Generally speaking we call them \emph{proprioceptive sensors}. 
 
 It is well understood in robotics that sensory data and inferred movement information are inherently noisy. 
 From a probabilistic point of view this means that, if the robot is keeping track of its own position, the \emph{uncertainty} of such position increases as the robot moves. 
 Conversely, supposing the robot is able to detect some objects (\emph{landmarks}, in jargon) within its surroundings, recognize them for a number of observations, and estimate the relative position between itself and each landmark, then it can use such information to reduce the uncertainty about its own position.
-Such a correlation between position estimation and landmark measurement is clearly explained in \cite[Unit C]{brenner204}.
+The correlation between position estimation and landmark measurement is clearly explained in \cite[Unit C]{brenner204}.
 
 The generic approach to \SLAM{} requires the following models to be properly defined: 
 \begin{description}
@@ -27,7 +27,7 @@ The generic approach to \SLAM{} requires the following models to be properly def
 	From a conceptual point of view, it's the inverse function of the Inverse Observation model. 
 	E.g., for our concerns, the Direct Observation Model takes into account the current estimation of the robot position and orientation $(x,\, y,\, \theta)$ and some known landmark position $(x_m,\, y_m)$ and computes the expected sensor data $(\rho,\, \alpha)$.
 \end{description}
-Such models are exploited by the following conceptual flow in order to produce a new estimation of the current position and orientation. It takes into account the previous estimation, and the last available proprioceptive and exteroceptive data:
+Such models are exploited by the following conceptual flow in order to produce a new estimation of the current position and orientation. It takes into account the previous estimation and the last available proprioceptive and exteroceptive data:
 \begin{enumerate}
 	\item \emph{Prediction} phase: a basic estimation of the new position and orientation is achieved by combining the previous estimation with the proprioceptive data according to the motion model.
 	\item \emph{Recognition} phase: the information from the exteroceptive data is analyzed in order to understand if it corresponds to an already known landmark or a new one. This normally exploits the inverse observation model: if it's a new landmark it must be added to the map.
@@ -35,10 +35,11 @@ Such models are exploited by the following conceptual flow in order to produce a
 	\item \emph{Correction} phase: the difference between the measurement and the expected measurement is used to improve the basic estimation from the prediction phase and the landmark position estimation.
 \end{enumerate}
 
-Our contribution consists of a practical tutorial for solving the \SLAM{} problem through the \emph{\Ekf} (\EKF), which supposes the robot state and the landmarks positions to be random vectors having a multivariate normal distribution, whose principal moments are estimated according to the phases described above.
+Our contribution consists of a practical tutorial for solving the \SLAM{} problem through the \emph{\Ekf} (\EKF), which supposes the robot state and the landmarks positions to be random vectors having a multivariate normal distribution, whose first and second order moments are estimated according to the phases mentioned above.
 
 \nocite{brenner204}
 \nocite{frischenschlager2013}
 \nocite{slamForDummies}
 \nocite{sola204}
 \nocite{thrun2005}
+\nocite{wiki:slam}

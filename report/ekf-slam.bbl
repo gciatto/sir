@@ -34,4 +34,13 @@ Sebastian Thrun, Wolfram Burgard, and Dieter Fox.
   Agents)}.
 \newblock The MIT Press, 2005.
 
+\bibitem[Wik16]{wiki:slam}
+Wikipedia.
+\newblock Simultaneous localization and mapping --- wikipedia{,} the free
+  encyclopedia.
+\newblock
+  \url{https://en.wikipedia.org/w/index.php?title=Simultaneous_localization_and_mapping&oldid=747305950},
+  2016.
+\newblock [Online; accessed 1-November-2016].
+
 \end{thebibliography}

@@ -152,7 +152,7 @@ In this section we describe and motivate the \EKF{} algorithm allowing us to fac
 		\end{array}\right)
 		= \hat{g}(\bvect{x},\, \bvect{u})
 	\end{equation}
-	assuming that the robot motion do not affect the landmark positions.
+	assuming the robot motion does not affect the landmark positions.
 	Linearizing $\hat{g}(\cdot)$ allows us to compute the predicted robot state covariances matrix $\Sigma_t$.
 	Such step is usually presented as follows: %\footnoteref{sec.ekf.alert}:
 	\begin{equation}
@@ -253,12 +253,12 @@ In this section we describe and motivate the \EKF{} algorithm allowing us to fac
 	\end{recap}
 	
 \subsection{The correction phase}
-	This phase exploits the correction moments $\bvect{z}$ and $Z$, produced by the observation phase for the $i$-th landmark, to correct the robot state moments $\bvect{x}_t$ and $\Sigma_t$ produced by the prediction phase. 
+	This phase exploits the correction moments $\bvect{z}$ and $Z$, produced by the observation phase for the $i$-th landmark, to correct the robot state moments $\bvect{x}_t$ and $\Sigma_t$, produced by the prediction phase. 
 	In other words, the correction phase improves the estimation about the robot pose and the landmarks positions taking into account the difference between the expected and actual measurements of the $i$-th landmark.
 	
 	Such a step only consists of algebraic operations. 
-	An clear intuition of what follows can be found in \cite[Unit C]{brenner204}.
-	For a more exhaustive explanation, refer to \cite[Ch. 3]{thrun2005}.
+	A clear intuition of what follows can be found in \cite[Unit C]{brenner204}.
+	For a more exhaustive explanation refer to \cite[Ch. 3]{thrun2005}.
 	
 	The correction phase is usually presented as composed by the following equations:
 	\begin{equation}
@@ -296,18 +296,18 @@ In this section we describe and motivate the \EKF{} algorithm allowing us to fac
 	
 	\vspace{1cm}
 	\begin{recap}
-		The correction step consist of Equations \ref{eq.correction.kalman_gain}, \ref{eq.correction.x} and \ref{eq.correction.Sigma}.
+		The correction step consists of Equations \ref{eq.correction.kalman_gain}, \ref{eq.correction.x} and \ref{eq.correction.Sigma}.
 	\end{recap}
 	
 
 \subsection{The recognition phase}
 	This phase exploits the inverse observation model $\lambda(\cdot)$ to discriminate between known and unknown landmarks. 
 	It is essentially a classification problem with $M + 1$ possible classes.
-	Some unclassified measurement vector $\bvect{s}_?$, received by the exteroceptive sensor, is mapped into the corresponding point $\bvect{m}_?$ within the global frame, according to the inverse observation model and the current estimation of the robot pose $\bvect{r_t}$:
+	Some unclassified measurement vector $\bvect{s}_?$, received by the exteroceptive sensor, is mapped to the corresponding point $\bvect{m}_?$ within the global frame, according to the inverse observation model and the current estimation of the robot pose $\bvect{r_t}$:
 	\[
 		\bvect{m}_? = \lambda(\bvect{r_t},\, \bvect{s}_?)
 	\]
-	The $\bvect{m}_?$ vector is then compared with every currently known landmark $\bvect{m}_{i,t}$ in $\bvect{x}_t$, in order to determine if it corresponds to one of them. 
+	The $\bvect{m}_?$ vector is then compared with all currently known landmarks $\bvect{m}_{i,t}$ in $\bvect{x}_t$, in order to determine if it corresponds to one of them. 
 	If it doesn't, it is considered a new landmark and the state vector is updated accordingly, as explained in Section \ref{sec.state_extension}.
 	The way such comparison is performed is the actual core of the recognition phase. 
 	Several strategies can be employed, some of them are described in the following examples.
@@ -316,14 +316,16 @@ In this section we describe and motivate the \EKF{} algorithm allowing us to fac
 		According to this strategy, the euclidean distance $d_E(\bvect{m}_?,\,\bvect{m}_{i,t})$ is computed for each $i = 1,\, \ldots,\, M$.
 		The vector $\bvect{m}_?$ is considered coincident with the first $\bvect{m}_{i,t}$ such that $d_E \leq D_{min}$, where $D_{min}$ is some predefined distance threshold.
 		
-		The problem with this approach is that it does not take into account the uncertainty related to $\bvect{m}_?$ and each $\bvect{m}_?$.
+		This is essentially a nearest-neighbor approach exploiting the Euclidean distance. 
+		The problem with this method is that it does not take into account the uncertainty related to $\bvect{m}_?$ and each $\bvect{m}_?$.
 		
 	\paragraph{Example: Mahanolobis distance w.r.t. the $i$-th landmark.}
 		This strategy exploits the information stored within the state covariances matrix $\Sigma_t$: its sub-matrix $\sigma_{\vect{m}_i,\vect{m}_i,t}$ is actually the current covariances matrix of the $i$-th landmark whose currently estimated position is $\bvect{m}_{i,t}$. 
 		According to this method, the Mahalonobis distance\footnote{\label{sec.ekf.mahalobis}refer to Appendix \ref{app.mahalonobis}} $d_M(\bvect{m}_?,\, \bvect{m}_{i,t},\, \sigma_{\vect{m}_i,\vect{m}_i,t})$ is computed for each $i = 1,\, \ldots,\, M$.
 		The vector $\bvect{m}_?$ is considered coincident with the first $\bvect{m}_{i,t}$ such that $d_M\leq D_{min}$, where $D_{min}$ is some predefined distance threshold.
 		
-		The problem with this approach is that it is more computationally expensive of the euclidean approach.
+		This is essentially a nearest-neighbor approach exploiting the Mahalonobis distance. 
+		The problem with this method is that it is more computationally expensive of the euclidean approach.
 	
 	\vspace{1cm}	
 	\begin{recap}
@@ -389,7 +391,7 @@ In this section we describe and motivate the \EKF{} algorithm allowing us to fac
 				\[
 					\sigma_{\vect{m}_{M+1},\vect{x}} = \vect{0}
 				\]
-			\item The initial uncertainty related to the landmark position is infinite\footnote{real-life implementation should use some considerably high value instead of $\infty$}, so:
+			\item The initial uncertainty related to the landmark position is infinite\footnote{software implementations should use some considerably high value instead of $\infty$}, so:
 				\[
 					\sigma_{\vect{m}_{M+1},\vect{m}_{M+1}} = 
 					\left(\begin{array}{cccc}

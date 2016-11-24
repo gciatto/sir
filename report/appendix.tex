@@ -43,7 +43,7 @@
 	\label{app.multinormal}
 	
 	Here we recall the notion of multivariate normal distribution and its linearity and geometric properties.
-	Let $\vect{x} \in \mathbb{R}^n$ be a normally distributed vector having mean $\vect{\mu} \in \mathbb{R}^n$ and covariances matrix $\Sigma \in \mathcal{M}_{n \times n}(\mathbb{R})$, then we write: 
+	Let $\vect{x} \in \mathbb{R}^n$ be a normally distributed \emph{random} vector having mean $\vect{\mu} \in \mathbb{R}^n$ and covariances matrix $\Sigma \in \mathcal{M}_{n \times n}(\mathbb{R})$, then we write: 
 	\[
 		\vect{x} \sim \mathcal{N}(\vect{\mu},\, \Sigma)
 	\]
@@ -53,7 +53,6 @@
 	\]
 	
 	\paragraph{Linearity.}
-	
 		Let $\vect{y} \in \mathbb{R}^m$ be a random vector, obtained by linearly combining a number of normally distributed independent random vectors $\vect{x}_i \sim \mathcal{N}(\vect{\mu}_i,\, \Sigma_i)$:
 		\[
 			\vect{y} = A_1 \cdot \vect{x}_1 + A_2 \cdot \vect{x}_2 + \ldots + \vect{b}
@@ -67,8 +66,7 @@
 		\end{equation}
 		
 	\paragraph{Representation.}
-		
-		Usually, a Multivariate normal distribution $\mathcal{N}(\vect{\mu},\, \Sigma)$ is imagined and represented as an hyper-ellipsoid centered in $\vect{\mu}$, whose axes are the (left) singular vectors of $\Sigma$. Such an ellipsoid is scaled (w.r.t. each axis) according to the singular values of $\Sigma$.
+		Usually, a multivariate normal distribution $\mathcal{N}(\vect{\mu},\, \Sigma)$ is imagined and represented as an hyper-ellipsoid centered in $\vect{\mu}$, whose axes are the (left) singular vectors of $\Sigma$. Such an ellipsoid is scaled (w.r.t. each axis) according to the singular values of $\Sigma$.
 		In order to produce a rendering of such an hyper-ellipsoid (which is an ordinary ellipse in the 2D case), it is sufficient to produce a singular-values-decomposition of the covariances matrix:
 		\[
 			\Sigma \stackrel{svd}{=} V \cdot D \cdot V^\top = 
@@ -118,7 +116,7 @@
 		\end{equation}
 		where ${\partial\mathrm{f}(\vect{p})}/{\partial\vect{x}}$ is the \emph{Jacobian} of function $\mathrm{f}$ in $\vect{p}$. This is a generalization of the Taylor series first order approximation for the multidimensional case. 
 		
-		The Jacobian of some function $\mathrm{f}(\vect{x}) = (\, f_1(\vect{x}),\, \ldots,\, f_m(\vect{x}) \,)^\top$ w.r.t. some variable vector $\vect{x} = (x_1,\, \ldots,\, x_n)^\top$ is the matrix of partial derivatives of the components of $\mathrm{f}$ respect to the components components of $\vect{x}$:
+		The Jacobian of some function $\mathrm{f}(\vect{x}) = (\, f_1(\vect{x}),\, \ldots,\, f_m(\vect{x}) \,)^\top$ w.r.t. some variable vector $\vect{x} = (x_1,\, \ldots,\, x_n)^\top$ is the matrix of partial derivatives of the components of $\mathrm{f}$ respect to the components of $\vect{x}$:
 		\begin{equation}
 			\arraycolsep=.1pt\def\arraystretch{1.5}
 			\frac{\partial\mathrm{f}(\vect{x})}{\partial\vect{x}} \stackrel{def}{=}
@@ -142,7 +140,7 @@
 	\subsection{Differential drive}
 		\label{app.differential_drive}
 		
-		A differential robot can only exploit two non-rotating wheels. 
+		A differential robot can only exploit two non-rotating (w.r.t. the \emph{z}-axis) wheels. 
 		Its actuators can simply impose a velocity value to each wheel. 
 		We will call $v_l$ and $v_r$ the left and right speed value, while the distance between the wheels is $2L$.
 		Here we recall how the linear velocity value $v$ in the heading direction and the angular velocity $\omega$, w.r.t. the \emph{instantaneous center of curvature}, can be computed as a function of $v_l$ and $v_r$:

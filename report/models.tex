@@ -25,12 +25,12 @@ It is important to understand that several Frames of Reference (\FoR{}) are invo
 	
 	\item The \emph{sensor} (or \emph{measurement}) \FoR{}, which depends on the exteroceptive sensor position within the robot frame, and is in general different from the robot frame. 
 	E.g., the sensor may be in position $(d_h,\, d_l)^\top$ w.r.t. the robot frame, as shown in Figure \ref{fig.fors.robot}, and this translation should be taken into account when handling sensor data in order to understand obstacles position on the map.
-	In this tutorial we consider, for simplicity, the sensor frame to be coincident with the robot frame \ie{} $d_h = d_h = 0$.
+	In this tutorial we consider, for simplicity, the sensor frame to be coincident with the robot frame \ie{} $d_h = d_l = 0$.
 	
 \end{itemize}
 
 Since part of the SLAM process is to build a map of the environment under the hypothesis that the robot has no prior knowledge about it, there is no constraint on how the robot should choose the initial global frame.
-In what follows, we (and the robot) assume that the global frame coincides with the initial robot frame, \ie{} the map frame is defined by the initial pose of the robot into the environment: the origin is its \emph{very first} position, the abscissas axis is its \emph{initial} heading direction and, consequently, the ordinate axis is its \emph{initial} lateral direction.
+In what follows, we (and the robot) assume that the global frame coincides with the initial robot frame, \ie{} the map frame is defined by the initial pose of the robot into the environment: the origin coincides with its \emph{very first} position, the abscissas axis coincides with its \emph{initial} heading direction and, consequently, the ordinate axis coincides with its \emph{initial} lateral direction.
 
 \subsection{The motion model}
 	The motion model is a function $g : \mathbb{R}^n \times \mathbb{R}^m \rightarrow \mathbb{R}^n$ mapping the previous robot pose vector, $\vect{r}_{t-1} \in \mathbb{R}^n$, \ie{} the vector containing the robot position and orientation (which are relative to the \emph{map} frame), into the current one, $\vect{r}_t \in \mathbb{R}^n$, by taking into account the last \emph{control} vector $\vect{u}_t \in \mathbb{R}^m$, \ie{} the vector containing proprioceptive data (which is relative to the \emph{robot} frame). 
@@ -47,7 +47,7 @@ In what follows, we (and the robot) assume that the global frame coincides with 
 		Suppose we want to experiment the SLAM problem on planar arena containing some obstacles.
 		Finally, suppose that each step of the robot controller is executed after ${\Delta T}_t$ seconds since the end of the previous step and that the duration of each step is negligible.
 		Under such assumptions, movements relative to the $z$-axis are not so relevant: we are only interested in the robot to solve the SLAM problem on the 2D plane.
-		In this setting we can assume the robot pose vector to be the triplet $\vect{r}_t = (x_t,\, y_t,\, \theta_t)^\top$, \ie{} the position and bearing of the robot w.r.t. the global frame, and the control vector to be the triplet $\vect{u}_t = (v_{l,t},\, v_{r,t},\, {\Delta T}_t)^\top$, \ie{} the velocities imposed to the wheels actuators at the end of the previous control step and the time elapsed since that moment.
+		In this setting, we can assume the robot pose vector to be the triplet $\vect{r}_t = (x_t,\, y_t,\, \theta_t)^\top$, \ie{} the position and bearing of the robot w.r.t. the global frame, and the control vector to be the triplet $\vect{u}_t = (v_{l,t},\, v_{r,t},\, {\Delta T}_t)^\top$, \ie{} the velocities imposed to the wheels actuators at the end of the previous control step and the time elapsed since that moment.
 		Notice that, if we assume ${\Delta T}_t$ to be constant, the control vector is the pair $\vect{u}_t = (v_{l,t},\, v_{r,t})^\top$.
 		Under such hypotheses, the motion model could be defined as follows\footnote{\label{sec.models.alert}\notationAlert}:
 		\begin{equation}
@@ -118,17 +118,17 @@ In what follows, we (and the robot) assume that the global frame coincides with 
 		\vect{m}_t = \lambda(\vect{r}_{t},\, \vect{s}_t)
 	\]
 	
-	The inverse observation model aims to produce an estimation of the position vector for some maybe-unknown landmark taking into account the measurement vector received by the exteroceptive sensor and the current estimation of the robot pose.
-	Such estimation is compared with the known landmarks positions in order to understand if it is relative to one of them.
+	The inverse observation model aims to produce an estimation of the position vector for some maybe-unknown landmark, taking into account the measurement vector received by the exteroceptive sensor and the current estimation of the robot pose.
+	Such estimation is then compared with the known landmarks positions in order to understand if it is relative to one of them.
 	
 	\paragraph{Example: Laser scanner on top of a robot.}
-		Suppose a laser scanner is located in position $(d_h,\,d_l)^\top$ within the robot frame\footnote{coordinates are expressed w.r.t. the $h$eading and $l$ateral axes}.
+		Suppose a laser scanner is located in position $(d_h,\,d_l)^\top$ within the robot frame\footnote{coordinates are expressed w.r.t. the $h$eading and $l$ateral axes}, as shown in Figure \ref{fig.observation}.
 		In the real case, the sensor will probably be on the top of the robot.
 		The laser scanners usually provide distance and angle (w.r.t. the sensor frame) for each obstacle which is closer than a maximum distance $D_{max} > 0$.
 		Moreover, they are usually characterized by $W_{V},W_{H} \subseteq [\,-\pi,\, \pi\,]$: vertical and horizontal angle windows, respectively.
 		Using spheric coordinates, $\rho$, $\theta$ and $\phi$, we say that the sensor can only perceive obstacles such that $\rho \leq D_{max}$ and $\theta \in W_{H}$ and $\phi \in W_{V}$.
 		For what concerns this example, we suppose that $W_H = (\,-\pi,\, \pi\,]$ and $W_V = \{\, \pi / 2 \,\}$, \ie{} the robot can perceive obstacles in any direction on the horizontal plane.
-		In the real case, one may take into account that the sensor be in an higher position than the robot and therefore not being able to perceive shorter obstacles.
+		In the real case, one should take into account that the sensor may be in an higher position than the robot and therefore not being able to perceive shorter obstacles.
 		
 		Under such hypotheses\footnote{\label{sec.models.subscript}the subscript indicating the computational step is omitted in order to keep the notation readable}, the measurement vector is the distance-and-angle pair $\vect{s} = (\rho,\, \alpha)^\top$, the landmark position is the pair $\vect{m} = (x_m,\, y_m)^\top$, and the inverse observation model can be simply defined as follows:
 		\begin{equation}
@@ -144,7 +144,7 @@ In what follows, we (and the robot) assume that the global frame coincides with 
 			\cdot
 			\left(
 				\left(\begin{array}{c}
-					d_x \\ d_y
+					d_h \\ d_l
 				\end{array}\right)
 				+ \rho \cdot
 				\left(\begin{array}{cc}
@@ -158,7 +158,7 @@ In what follows, we (and the robot) assume that the global frame coincides with 
 			\end{array}\right)
 		\end{equation}
 		
-		Please note that, if $d_x = d_y = 0$, \ie{} sensor is located into the robot center, Equation \ref{eq.inv_observation.laser} can reduces to:
+		Please note that, if $d_h = d_l = 0$, \ie{} sensor is located into the robot center, Equation \ref{eq.inv_observation.laser} reduces to:
 		\[
 			\left(\begin{array}{c}
 				x_m \\ y_m
@@ -240,7 +240,7 @@ In what follows, we (and the robot) assume that the global frame coincides with 
 				\mathrm{atan2}(y_m - y,\ x_m - x) - \theta
 			\end{array}\right)
 		\]
-		which is indeeds a far simpler expression.
+		which is indeed a far simpler expression.
 		
 		\begin{important}
 			Always take care of normalizing the angle $\alpha$, since it's a subtraction of angles.

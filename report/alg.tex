@@ -1,5 +1,34 @@
 In this section we unify the phases described in Section \ref{sec.ekf_phases} into a single algorithm which can be employed as a starting point for solving the \SLAM{} problem.
 
+\begin{algorithm}[t]
+	\caption{\Ekf{} $t$-th step}
+	\label{alg.ekf.step}
+	\begin{algorithmic}
+		
+		\Function{Ekf\_Step}{$\bvect{x}$, $\Sigma$, $M$, $\bvect{u}$, $S$}
+		%			\Statex
+		\State $\bvect{x}$, $\Sigma$ $\gets$ \Call{Prediction}{$\bvect{x}$, $\Sigma$, $\bvect{u}$}
+		%			\Statex
+		\ForAll{$\bvect{s} \in S$}
+		%				\Statex
+		% \State $\bvect{m}$ $\gets$ \Call{Inverse\_Observation}{$\bvect{x}$, $\bvect{s}$}
+		\State $i$, $\bvect{m}$ $\gets$ \Call{Recognition}{$\bvect{x}$, $\Sigma$, $\bvect{s}$}
+		%				\Statex
+		\If {$i = M + 1$}
+		\State $\bvect{x}$, $\Sigma$, $M$ $\gets$ \Call{Extension}{$\bvect{x}$, $\Sigma$, $\bvect{s}$, $\bvect{m}$}
+		\EndIf
+		%				\Statex
+		\State $\bvect{z}$, $Z$ $\gets$ \Call{Observation}{$\bvect{x}$, $\Sigma$, $\bvect{s}$, $\bvect{m}$}
+		\State $\bvect{x}$, $\Sigma$ $\gets$ \Call{Correction}{$\bvect{x}$, $\Sigma$, $\bvect{z}$, $Z$}
+		%				\Statex
+		\EndFor
+		%			\Statex
+		\State \Return $\bvect{x}$, $\Sigma$, $M$
+		%			\Statex
+		\EndFunction
+	\end{algorithmic}
+\end{algorithm}
+
 Algorithm \ref{alg.ekf.step} shows the pseudocode of the $t$-th step of the \Ekf{}.
 Each phase from Section \ref{sec.ekf_phases} is encapsulated within a function call.
 Here we consider the general (and usual) case where a set of measurements $S$ relative to the $t$-th step is available.
@@ -9,31 +38,3 @@ Only one algorithmic step per control vector should be executed, \ie{} the \text
 Moreover, if the control vector source is an odometric sensor, it is important to keep the execution time of the $t$-th step lower than the time between two consecutive sensor data, otherwise the robot estimated state will become inconsistent.
 This may be critical since the robot will supposedly keep discovering new landmarks, increasing both the space and time required to execute one step of the algorithm.
 
-\begin{algorithm}
-	\caption{\Ekf{} $t$-th step}
-	\label{alg.ekf.step}
-	\begin{algorithmic}[1]
-		
-		\Function{Ekf\_Step}{$\bvect{x}$, $\Sigma$, $M$, $\bvect{u}$, $S$}
-%			\Statex
-			\State $\bvect{x}$, $\Sigma$ $\gets$ \Call{Prediction}{$\bvect{x}$, $\Sigma$, $\bvect{u}$}
-%			\Statex
-			\ForAll{$\bvect{s} \in S$}
-%				\Statex
-				% \State $\bvect{m}$ $\gets$ \Call{Inverse\_Observation}{$\bvect{x}$, $\bvect{s}$}
-				\State $i$, $\bvect{m}$ $\gets$ \Call{Recognition}{$\bvect{x}$, $\Sigma$, $\bvect{s}$}
-%				\Statex
-				\If {$i = M + 1$}
-					\State $\bvect{x}$, $\Sigma$, $M$ $\gets$ \Call{Extension}{$\bvect{x}$, $\Sigma$, $\bvect{s}$, $\bvect{m}$}
-				\EndIf
-%				\Statex
-				\State $\bvect{z}$, $Z$ $\gets$ \Call{Observation}{$\bvect{x}$, $\Sigma$, $\bvect{s}$, $\bvect{m}$}
-				\State $\bvect{x}$, $\Sigma$ $\gets$ \Call{Correction}{$\bvect{x}$, $\Sigma$, $\bvect{z}$, $Z$}
-%				\Statex
-			\EndFor
-%			\Statex
-			\State \Return $\bvect{x}$, $\Sigma$, $M$
-%			\Statex
-		\EndFunction
-	\end{algorithmic}
-\end{algorithm}
